@@ -484,7 +484,7 @@ FIXED_REG(9,  en_vdd_sdmmc1_a00, en_vdd_sdmmc1,		FIXED_SUPPLY(en_3v3_sys_a00),
 	0,	0,	TEGRA_GPIO_PC6,				true,	0,	3300);
 FIXED_REG(10, en_3v3_fuse_a00,	en_3v3_fuse,		FIXED_SUPPLY(en_3v3_sys_a00),
 	0,	0,	TEGRA_GPIO_PC1,				true,	0,	3300);
-//&*&*&*BC1_120515: disalbe cdc_en function	
+//&*&*&*BC1_120515: disalbe cdc_en function
 /*FIXED_REG(11, cdc_en_a00,	cdc_en,			max77663_rails(sd2),
 	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);*/
 //&*&*&*BC2_120515: disalbe cdc_en function
@@ -510,8 +510,8 @@ FIXED_REG(9,  en_vdd_sdmmc1_a01, en_vdd_sdmmc1,		FIXED_SUPPLY(en_3v3_sys_a01),
 	0,	0,	TEGRA_GPIO_PC6,				true,	0,	3300);
 FIXED_REG(10, en_3v3_fuse_a01,	en_3v3_fuse,		FIXED_SUPPLY(en_3v3_sys_a01),
 	0,	0,	TEGRA_GPIO_PC1,				true,	0,	3300);
-	
-//&*&*&*BC1_120515: disalbe cdc_en function	
+
+//&*&*&*BC1_120515: disalbe cdc_en function
 /*FIXED_REG(11, cdc_en_a01,	cdc_en,			max77663_rails(sd2),
 	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);*/
 //&*&*&*BC2_120515: disalbe cdc_en function
@@ -540,7 +540,7 @@ FIXED_REG(13, en_cam1_ldo_a01,	en_cam1_ldo,		NULL,
 	ADD_FIXED_REG(en_vdd_com_a00),		\
 	ADD_FIXED_REG(en_vdd_sdmmc1_a00),	\
 	ADD_FIXED_REG(en_3v3_fuse_a00),		\
-//&*&*&*BC1_120515: disalbe cdc_en function	
+//&*&*&*BC1_120515: disalbe cdc_en function
 //	ADD_FIXED_REG(cdc_en_a00),		\
 //&*&*&*BC2_120515: disalbe cdc_en function
 
@@ -558,7 +558,7 @@ FIXED_REG(13, en_cam1_ldo_a01,	en_cam1_ldo,		NULL,
 	ADD_FIXED_REG(en_3v3_fuse_a01),		\
 	ADD_FIXED_REG(vdd_vbrtr),		\
 	ADD_FIXED_REG(en_cam1_ldo_a01),		\
-//&*&*&*BC1_120515: disalbe cdc_en function	
+//&*&*&*BC1_120515: disalbe cdc_en function
 //	ADD_FIXED_REG(cdc_en_a01),		\
 //&*&*&*BC2_120515: disalbe cdc_en function
 
@@ -661,14 +661,14 @@ static struct tegra_tsensor_pmu_data  tpdata = {
 	//.poweroff_reg_addr = 0x3F,
 	//.poweroff_reg_data = 0x80,
 	.poweroff_reg_addr = 0x41,
-	.poweroff_reg_data = 0xe0,	
+	.poweroff_reg_data = 0xe0,
 	.reset_tegra = 1,
 	.controller_type = 0,
 	.i2c_controller_id = 4,
 	.pinmux = 0,
 	.pmu_16bit_ops = 0,
 	//.pmu_i2c_addr = 0x2D,
-	.pmu_i2c_addr = 0x3c,	
+	.pmu_i2c_addr = 0x3c,
 };
 //&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
