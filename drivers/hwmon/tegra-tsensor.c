@@ -96,7 +96,7 @@
 #define CCLK_G_BURST_POLICY_REG_REL_OFFSET	0x368
 #define TSENSOR_SLOWDOWN_BIT			23
 
-//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 /* macros used for temperature calculations */
 //#define get_temperature_int(X)			((X) / 100)
 //#define get_temperature_fraction(X)		(((int)(abs(X))) % 100)
@@ -108,15 +108,15 @@
 #define get_temperature_fraction(X)		(((int)(abs(X))) % 1000000)
 
 #define get_temperature_round(X)		DIV_ROUND_CLOSEST(X, 1000000)
-//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
 #define MILLICELSIUS_TO_CELSIUS(i)		((i) / 1000)
 #define CELSIUS_TO_MILLICELSIUS(i)		((i) * 1000)
 
-//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 #define TSENSOR_MILLI_CELSIUS(x) \
 	DIV_ROUND_CLOSEST((x), 1000)
-//&*&*&*HC_20120618, add NV patch (bug id #999175)	
+//&*&*&*HC_20120618, add NV patch (bug id #999175)
 
 #define get_ts_state(data) tsensor_get_reg_field(data,\
 			((data->instance << 16) | SENSOR_STATUS0), \
@@ -203,13 +203,13 @@ struct tegra_tsensor_data {
 	/* temperature readings from instance tsensor - 0/1 */
 	unsigned int instance;
 
-	//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+	//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 	//int A_e_minus6;
 	//int B_e_minus2;
 	s64 A_e_minus12;
 	int B_e_minus6;
-	//&*&*&*HC2_20120618, add NV patch (bug id #999175)		
-	
+	//&*&*&*HC2_20120618, add NV patch (bug id #999175)
+
 	unsigned int fuse_T1;
 	unsigned int fuse_F1;
 	unsigned int fuse_T2;
@@ -376,10 +376,10 @@ static void get_chip_tsensor_coeff(struct tegra_tsensor_data *data)
 	data->n_e_minus6 = coeff_table[coeff_index].e_minus6_n;
 	data->p_e_minus2 = coeff_table[coeff_index].e_minus2_p;
 
-	//&*&*&*HC1_20120618, add NV patch (bug id #999175)		
+	//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 	pr_info("tsensor coeff: m=%d*10^-6,n=%d*10^-6,p=%d*10^-2\n",
-		data->m_e_minus6, data->n_e_minus6, data->p_e_minus2);	
-	//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+		data->m_e_minus6, data->n_e_minus6, data->p_e_minus2);
+	//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 }
 
 /* tsensor counter read function */
@@ -505,7 +505,7 @@ static ssize_t tsensor_show_counters(struct device *dev,
 		dev_vdbg(data->hwmon_dev, "%s has curr_avg=0x%x, "
 			"temp0=%d\n", __func__, curr_avg, temp);
 
-		//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+		//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 		snprintf(buf, (((LOCAL_STR_SIZE1 << 1) + 3) +
 			strlen(fixed_str)),
 			//"%d.%02dC\n",
@@ -513,8 +513,8 @@ static ssize_t tsensor_show_counters(struct device *dev,
 			get_temperature_int(temp),
 			//get_temperature_fraction(temp));
 			get_temperature_fraction(temp),
-			((curr_avg & 0xFFFF0000) >> 16));			
-		//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+			((curr_avg & 0xFFFF0000) >> 16));
+		//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 	}
 	return strlen(buf);
 error:
@@ -600,13 +600,13 @@ static ssize_t show_tsensor_param(struct device *dev,
 		if (err != 0)
 			goto labelErr;
 
-		//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+		//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 		//snprintf(buf, PAGE_SIZE, "%s threshold: %d.%d Celsius\n", info,
 		//	get_temperature_int(temp),
 		snprintf(buf, PAGE_SIZE, "%s threshold: %d.%06d Celsius\n",
-			info, get_temperature_int(temp),		
+			info, get_temperature_int(temp),
 			get_temperature_fraction(temp));
-		//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+		//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 	}
 	return strlen(buf);
 
@@ -704,7 +704,7 @@ int tsensor_thermal_get_temp(struct tegra_tsensor_data *data,
 	//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 	//temp *= 10;
 	/* temperature is in milli-Celsius */
-	temp = TSENSOR_MILLI_CELSIUS(temp);	
+	temp = TSENSOR_MILLI_CELSIUS(temp);
 	//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
 	mutex_lock(&data->mutex);
@@ -899,7 +899,7 @@ static int calc_interim_temp(struct tegra_tsensor_data *data,
 			val2 *= -1;
 		*p_interim_temp = val2;
 		dev_dbg(data->hwmon_dev, "counter=%d, interim_temp=%lld\n",
-			counter, *p_interim_temp);		
+			counter, *p_interim_temp);
 	}
 	//dev_dbg(data->hwmon_dev, "tsensor: counter=0x%x, interim "
 	//	"temp*100=%d\n",
@@ -913,14 +913,14 @@ static int calc_interim_temp(struct tegra_tsensor_data *data,
  */
 static void calc_final_temp(struct tegra_tsensor_data *data,
 	//int interim_temp, int *p_final_temp)
-	s64 interim_temp, int *p_final_temp)	
+	s64 interim_temp, int *p_final_temp)
 {
 	//int temp1, temp2, temp;
 	s64 temp1_64, temp2_64, temp_64, temp1_64_rem;
 	u32 temp_rem_32;
 	u32 divisor;
 	u64 divisor_64;
-	bool is_neg;	
+	bool is_neg;
 	/*
 	 * T-final = m * T-int ^2 + n * T-int + p
 	 * m = -0.002775
@@ -1000,7 +1000,7 @@ static void calc_final_temp(struct tegra_tsensor_data *data,
 	/* temperature * 10^14 / 10^8 */
 	/* get LS decimal digit rounding */
 	*p_final_temp = (s32)temp_64;
-	dev_dbg(data->hwmon_dev, "T-final stage4=%d\n", *p_final_temp);	
+	dev_dbg(data->hwmon_dev, "T-final stage4=%d\n", *p_final_temp);
 }
 
 /*
@@ -1063,7 +1063,7 @@ static int tsensor_get_const_AB(struct tegra_tsensor_data *data)
 			if (is_neg)
 				temp_val2 *= -1;
 			data->B_e_minus6 = (s32)temp_val2;
-			/* B is 10^6 times now */			
+			/* B is 10^6 times now */
 		}
 	}
 	//dev_dbg(data->hwmon_dev, "A_e_minus6 = %d\n", data->A_e_minus6);
@@ -1107,7 +1107,7 @@ static int tsensor_count_2_temp(struct tegra_tsensor_data *data,
 		"temp*10^6=%lld, Final temp=%d.%06d\n",
 		count, interim_temp,
 		get_temperature_int(*p_temperature),
-		get_temperature_fraction(*p_temperature));	
+		get_temperature_fraction(*p_temperature));
 	return 0;
 }
 //&*&*&*HC2_20120618, add NV patch (bug id #999175)
@@ -1264,7 +1264,7 @@ static void get_quadratic_roots(struct tegra_tsensor_data *data,
 	v_e_minus6_sqrt_b2_minus4ac = DIV_ROUND_CLOSEST(
 		(int_sqrt(v_e_minus6_b2_minus4ac)*1000000),
 		int_sqrt(1000000));
-	dev_dbg(data->hwmon_dev, "A_e_minus12=%lld, B_e_minus6=%d, "	
+	dev_dbg(data->hwmon_dev, "A_e_minus12=%lld, B_e_minus6=%d, "
 		"m_e_minus6=%d, n_e_minus6=%d, p_e_minus2=%d, "
 	//	"temp=%d\n", data->A_e_minus6, data->B_e_minus2,
 		"temp=%d\n", data->A_e_minus12, data->B_e_minus6,
@@ -1366,7 +1366,7 @@ static void get_quadratic_roots(struct tegra_tsensor_data *data,
 
 	/* logs temperature -> counter conversion */
 	dev_dbg(data->hwmon_dev, "temperature=%d, counter1=%#x, "
-		"counter2=%#x\n", temp, *p_counter1, *p_counter2);	
+		"counter2=%#x\n", temp, *p_counter1, *p_counter2);
 }
 
 /*
@@ -1419,7 +1419,7 @@ static void tsensor_temp_2_count(struct tegra_tsensor_data *data,
 	 * at 35 deg temperature: counter1=23137, counter2=11411
 	 * hence, for above values we are assuming counter2 has
 	 * the correct value
-	 */	
+	 */
 }
 //&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
@@ -1525,19 +1525,19 @@ static void print_temperature_2_counter_table(
 	//	120
 	//};
 	int min = -25;
-	int max = 120;	
+	int max = 120;
 	unsigned int counter1, counter2;
 	int temperature;
-	
+
 	dev_dbg(data->hwmon_dev, "Temperature and counter1 and "
 		"counter2 chart **********\n");
 	//for (i = 0; i < ARRAY_SIZE(temp_list); i++) {
 	//	tsensor_temp_2_count(data, temp_list[i],
 	for (i = min; i <= max; i++) {
-		tsensor_temp_2_count(data, i,	
+		tsensor_temp_2_count(data, i,
 			&counter1, &counter2);
 		//dev_dbg(data->hwmon_dev, "temperature[%d]=%d, "
-		dev_dbg(data->hwmon_dev, "temperature=%d, "		
+		dev_dbg(data->hwmon_dev, "temperature=%d, "
 			"counter1=0x%x, counter2=0x%x\n",
 			//i, temp_list[i], counter1, counter2);
 			i, counter1, counter2);
@@ -1548,7 +1548,7 @@ static void print_temperature_2_counter_table(
 			get_temperature_fraction(temperature));
 		if (!temp_matched(i, get_temperature_round(temperature)))
 			dev_dbg(data->hwmon_dev, "tsensor temp to counter to temp conversion failed for temp=%d\n",
-				i);			
+				i);
 	}
 	dev_dbg(data->hwmon_dev, "\n\n");
 }
@@ -1937,11 +1937,11 @@ static void tsensor_work_func(struct work_struct *work)
 		if (!tsensor_within_limits(data))
 			dev_dbg(data->hwmon_dev,
 				"repeated work queueing state=%d\n",
-				get_ts_state(data));			
+				get_ts_state(data));
 			queue_delayed_work(data->workqueue, &data->work,
 				HZ * DEFAULT_TSENSOR_M /
 				DEFAULT_TSENSOR_CLK_HZ);
-		//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+		//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 	}
 }
 
