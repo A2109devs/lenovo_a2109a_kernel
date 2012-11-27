@@ -33,6 +33,7 @@ struct pwm_bl_data {
 	int			(*check_fb)(struct device *, struct fb_info *);
 };
 
+extern int cl2n_panel_status;
 static int pwm_backlight_update_status(struct backlight_device *bl)
 {
 	struct pwm_bl_data *pb = dev_get_drvdata(&bl->dev);
@@ -49,9 +50,17 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 		brightness = pb->notify(pb->dev, brightness);
 
 	if (brightness == 0) {
+		
 		pwm_config(pb->pwm, 0, pb->period);
 		pwm_disable(pb->pwm);
-	} else {
+/*++++20120607, jimmySu add to judge display status */
+	} else if (cl2n_panel_status == 0) {
+		pwm_config(pb->pwm, 0, pb->period);
+		pwm_disable(pb->pwm);
+	}
+/*----20120607, jimmySu add to judge display status */
+	else {
+	
 		brightness = pb->lth_brightness +
 			(brightness * (pb->period - pb->lth_brightness) / max);
 		pwm_config(pb->pwm, brightness, pb->period);

@@ -68,14 +68,6 @@
 	}
 #endif
 
-/* This information is passed by bootloader */
-#define COMMCHIP_UNKNOWN		0
-#define COMMCHIP_NOCHIP			1
-#define COMMCHIP_BROADCOM_BCM4329	2
-#define COMMCHIP BROADCOM_BCM4330	3
-#define COMMCHIP_MARVELL_SD8797		4
-
-
 struct memory_accessor;
 
 void tegra_assert_system_reset(char mode, const char *cmd);
@@ -170,10 +162,10 @@ void cpufreq_set_conservative_governor_param(char *name, int value);
 int get_core_edp(void);
 enum panel_type get_panel_type(void);
 int tegra_get_modem_id(void);
-int tegra_get_commchip_id(void);
 enum power_supply_type get_power_supply_type(void);
 enum audio_codec_type get_audio_codec_type(void);
 int get_maximum_cpu_current_supported(void);
 enum image_type get_tegra_image_type(void);
-
+int cl2n_get_board_strap(void); //&*&*&*SJ_20120510, Add get board strap value.
+int tegra_get_hw_ramcode(void);	//&*&*&*SJ_20120510, Add get RAM_CODE value.
 #endif

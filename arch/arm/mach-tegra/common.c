@@ -141,7 +141,6 @@ void tegra_assert_system_reset(char mode, const char *cmd)
 #endif
 }
 static int modem_id;
-static int commchip_id;
 static int sku_override;
 static int debug_uart_port_id;
 static enum audio_codec_type audio_codec_name;
@@ -711,22 +710,6 @@ int tegra_get_modem_id(void)
 
 __setup("modem_id=", tegra_modem_id);
 
-static int __init tegra_commchip_id(char *id)
-{
-	char *p = id;
-
-	if (get_option(&p, &commchip_id) != 1)
-		return 0;
-	return 1;
-}
-
-int tegra_get_commchip_id(void)
-{
-	return commchip_id;
-}
-
-__setup("commchip_id=", tegra_commchip_id);
-
 /*
  * Tegra has a protected aperture that prevents access by most non-CPU
  * memory masters to addresses above the aperture value.  Enabling it
@@ -1066,4 +1049,45 @@ void cpufreq_set_conservative_governor(void)
 {
 	cpufreq_set_governor(cpufreq_gov_conservative);
 }
+
 #endif /* CONFIG_TEGRA_CONVSERVATIVE_GOV_ON_EARLYSUPSEND */
+
+//&*&*&*SJ1_20120510, Add get RAM_CODE value.
+static int hw_ramcode;
+
+static int __init tegra_hw_ramcode(char *code)
+{
+	char *p = code;
+
+	hw_ramcode = memparse(p, &p);
+	return 1;
+}
+
+int tegra_get_hw_ramcode(void)
+{
+	return hw_ramcode;
+}
+
+__setup("hw_ramcode=", tegra_hw_ramcode);
+
+//&*&*&*SJ2_20120510, Add get RAM_CODE value.
+
+//&*&*&*SJ1_20120510, Add get board_strap value.
+static int board_strap = 0;
+
+static int __init cl2n_board_strap(char *code)
+{
+	char *p = code;
+
+	board_strap = memparse(p, &p);
+	return 1;
+}
+
+int cl2n_get_board_strap(void)
+{
+	return board_strap;
+}
+EXPORT_SYMBOL(cl2n_get_board_strap);
+
+__setup("board_strap=", cl2n_board_strap);
+//&*&*&*SJ2_20120510, Add get board_strap value.

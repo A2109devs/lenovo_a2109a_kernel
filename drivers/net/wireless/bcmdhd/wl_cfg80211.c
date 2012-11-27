@@ -65,6 +65,42 @@
 #include <wl_cfg80211.h>
 #include <wl_cfgp2p.h>
 
+
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+/* these items should evetually go into wireless.h of the linux system headfile dir */
+#ifndef IW_ENCODE_ALG_SM4
+#define IW_ENCODE_ALG_SM4 0x20
+#endif
+
+#ifndef IW_AUTH_WAPI_ENABLED
+#define IW_AUTH_WAPI_ENABLED 0x20
+#endif
+
+#ifndef IW_AUTH_WAPI_VERSION_1
+#define IW_AUTH_WAPI_VERSION_1  0x00000008
+#endif
+
+#ifndef IW_AUTH_CIPHER_SMS4
+#define IW_AUTH_CIPHER_SMS4     0x00000020
+#endif
+
+#ifndef IW_AUTH_KEY_MGMT_WAPI_PSK
+#define IW_AUTH_KEY_MGMT_WAPI_PSK 4
+#endif
+
+#ifndef IW_AUTH_KEY_MGMT_WAPI_CERT
+#define IW_AUTH_KEY_MGMT_WAPI_CERT 8
+#endif
+#endif /* BCMWAPI_WPI */
+
+#ifdef BCMWAPI_WPI
+#define IW_WSEC_ENABLED(wsec)   ((wsec) & (WEP_ENABLED | TKIP_ENABLED | AES_ENABLED | SMS4_ENABLED))
+#else /* BCMWAPI_WPI */
+#define IW_WSEC_ENABLED(wsec)   ((wsec) & (WEP_ENABLED | TKIP_ENABLED | AES_ENABLED))
+#endif /* BCMWAPI_WPI */
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
+
 static struct sdio_func *cfg80211_sdio_func;
 static struct wl_priv *wlcfg_drv_priv;
 
@@ -301,6 +337,12 @@ static s32 wl_set_key_mgmt(struct net_device *dev,
 	struct cfg80211_connect_params *sme);
 static s32 wl_set_set_sharedkey(struct net_device *dev,
 	struct cfg80211_connect_params *sme);
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+static s32 wl_set_set_wapi_ie(struct net_device *dev,
+        struct cfg80211_connect_params *sme);
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 static s32 wl_get_assoc_ies(struct wl_priv *wl, struct net_device *ndev);
 static void wl_ch_to_chanspec(int ch,
 	struct wl_join_params *join_params, size_t *join_params_size);
@@ -590,6 +632,11 @@ static const u32 __wl_cipher_suites[] = {
 	WLAN_CIPHER_SUITE_TKIP,
 	WLAN_CIPHER_SUITE_CCMP,
 	WLAN_CIPHER_SUITE_AES_CMAC,
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+	WLAN_CIPHER_SUITE_SMS4
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 };
 
 /* There isn't a lot of sense in it, but you can transmit anything you like */
@@ -1856,6 +1903,15 @@ wl_set_wpa_version(struct net_device *dev, struct cfg80211_connect_params *sme)
 	if (is_wps_conn(sme))
 		val = WPA_AUTH_DISABLED;
 
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+	if (sme->crypto.wpa_versions & NL80211_WAPI_VERSION_1) {
+		WL_DBG((" * wl_set_wpa_version, set wpa_auth"
+			" to WPA_AUTH_WAPI 0x400"));
+		val = WAPI_AUTH_PSK; /* | WAPI_AUTH_UNSPECIFIED; */
+	}
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 	WL_DBG(("setting wpa_auth to 0x%0x\n", val));
 	err = wldev_iovar_setint_bsscfg(dev, "wpa_auth", val, bssidx);
 	if (unlikely(err)) {
@@ -1867,6 +1923,31 @@ wl_set_wpa_version(struct net_device *dev, struct cfg80211_connect_params *sme)
 	return err;
 }
 
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+static s32
+wl_set_set_wapi_ie(struct net_device *dev, struct cfg80211_connect_params *sme)
+{
+	struct wl_priv *wl = wlcfg_drv_priv;
+	s32 err = 0;
+	s32 bssidx = wl_cfgp2p_find_idx(wl, dev);
+
+	WL_DBG((" %s \n", __FUNCTION__));
+
+	if (sme->crypto.wpa_versions & NL80211_WAPI_VERSION_1) {
+		err = wldev_iovar_setbuf_bsscfg(dev, "wapiie", sme->ie,
+			sme->ie_len, ioctlbuf, sizeof(ioctlbuf), bssidx);
+
+		if (unlikely(err)) {
+			WL_ERR(("===> set_wapi_ie Error (%d)\n", err));
+			return err;
+		}
+	} else
+		WL_DBG((" * skip \n"));
+	return err;
+}
+#endif /* BCMWAPI_WPI */
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 static s32
 wl_set_auth_type(struct net_device *dev, struct cfg80211_connect_params *sme)
 {
@@ -1914,6 +1995,11 @@ wl_set_set_cipher(struct net_device *dev, struct cfg80211_connect_params *sme)
 	s32 pval = 0;
 	s32 gval = 0;
 	s32 err = 0;
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+	s32 val = 0;
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 	s32 bssidx = wl_cfgp2p_find_idx(wl, dev);
 
 	if (sme->crypto.n_ciphers_pairwise) {
@@ -1931,6 +2017,14 @@ wl_set_set_cipher(struct net_device *dev, struct cfg80211_connect_params *sme)
 		case WLAN_CIPHER_SUITE_AES_CMAC:
 			pval = AES_ENABLED;
 			break;
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+		case WLAN_CIPHER_SUITE_SMS4:
+			val = SMS4_ENABLED;
+			pval = SMS4_ENABLED;
+			break;
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 		default:
 			WL_ERR(("invalid cipher pairwise (%d)\n",
 				sme->crypto.ciphers_pairwise[0]));
@@ -1952,6 +2046,14 @@ wl_set_set_cipher(struct net_device *dev, struct cfg80211_connect_params *sme)
 		case WLAN_CIPHER_SUITE_AES_CMAC:
 			gval = AES_ENABLED;
 			break;
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+		case WLAN_CIPHER_SUITE_SMS4:
+			val = SMS4_ENABLED;
+			gval = SMS4_ENABLED;
+			break;
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 		default:
 			WL_ERR(("invalid cipher group (%d)\n",
 				sme->crypto.cipher_group));
@@ -1964,9 +2066,20 @@ wl_set_set_cipher(struct net_device *dev, struct cfg80211_connect_params *sme)
 	if (is_wps_conn(sme)) {
 		err = wldev_iovar_setint_bsscfg(dev, "wsec", 4, bssidx);
 	} else {
-		WL_DBG((" NO, is_wps_conn, Set pval | gval to WSEC"));
-		err = wldev_iovar_setint_bsscfg(dev, "wsec",
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+		if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_SMS4) {
+			WL_DBG((" NO, is_wps_conn, WAPI set to SMS4_ENABLED"));
+			err = wldev_iovar_setint_bsscfg(dev, "wsec", val, bssidx);
+		} else {
+#endif
+			WL_DBG((" NO, is_wps_conn, Set pval | gval to WSEC"));
+			err = wldev_iovar_setint_bsscfg(dev, "wsec",
 				pval | gval, bssidx);
+#ifdef BCMWAPI_WPI
+		}
+#endif
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 	}
 	if (unlikely(err)) {
 		WL_ERR(("error (%d)\n", err));
@@ -4086,11 +4199,9 @@ static struct wireless_dev *wl_alloc_wdev(struct device *sdiofunc_dev)
 #endif
 		WIPHY_FLAG_4ADDR_STATION;
 
-#ifdef ENABLE_CUSTOM_REGULATORY_DOMAIN
 	WL_DBG(("Registering custom regulatory)\n"));
 	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
 	wiphy_apply_custom_regulatory(wdev->wiphy, &brcm_regdom);
-#endif
 	/* Now we can register wiphy with cfg80211 module */
 	err = wiphy_register(wdev->wiphy);
 	if (unlikely(err < 0)) {
@@ -4157,6 +4268,9 @@ static s32 wl_inform_single_bss(struct wl_priv *wl, struct wl_bss_info *bi)
 	struct wl_cfg80211_bss_info *notif_bss_info;
 	struct wl_scan_req *sr = wl_to_sr(wl);
 	struct beacon_proberesp *beacon_proberesp;
+//&*&*&*JohWan1 BCM4330 solve system crash after send wl scan
+	struct cfg80211_bss *cbss = NULL;
+//&*&*&*JohWan2 BCM4330 solve system crash after send wl scan
 	s32 mgmt_type;
 	s32 signal;
 	u32 freq;
@@ -4202,6 +4316,9 @@ static s32 wl_inform_single_bss(struct wl_priv *wl, struct wl_bss_info *bi)
 		u.beacon.variable) + wl_get_ielen(wl);
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 38) && !defined(WL_COMPAT_WIRELESS)
 	freq = ieee80211_channel_to_frequency(notif_bss_info->channel);
+//&*&*&*JohWan1 BCM4330 solve system crash after send wl scan
+	(void)band->band;
+//&*&*&*JohWan2 BCM4330 solve system crash after send wl scan
 #else
 	freq = ieee80211_channel_to_frequency(notif_bss_info->channel, band->band);
 #endif
@@ -4215,13 +4332,34 @@ static s32 wl_inform_single_bss(struct wl_priv *wl, struct wl_bss_info *bi)
 
 	signal = notif_bss_info->rssi * 100;
 
-	if (unlikely(!cfg80211_inform_bss_frame(wiphy, channel, mgmt,
-		le16_to_cpu(notif_bss_info->frame_len),
-		signal, GFP_KERNEL))) {
+//&*&*&*JohWan1 BCM4330 solve system crash after send wl scan
+#if defined(WLP2P) && ENABLE_P2P_INTERFACE
+	if (wl->p2p_net && wl->scan_request && wl->scan_request->dev == wl->p2p_net) {
+#else
+	if (p2p_is_on(wl) && p2p_scan(wl)) {
+#endif
+		/* find the P2PIE, if we do not find it, we will discard this frame */
+		wifi_p2p_ie_t * p2p_ie;
+		if ((p2p_ie = wl_cfgp2p_find_p2pie((u8 *)beacon_proberesp->variable,
+			wl_get_ielen(wl))) == NULL) {
+			WL_ERR(("Couldn't find P2PIE in probe response/beacon\n"));
+			kfree(notif_bss_info);
+			return err;
+		}
+	}
+
+	cbss = cfg80211_inform_bss_frame(wiphy, channel, mgmt,
+		le16_to_cpu(notif_bss_info->frame_len), signal, GFP_KERNEL);
+	if (unlikely(!cbss)) {
+//&*&*&*JohWan2 BCM4330 solve system crash after send wl scan
 		WL_ERR(("cfg80211_inform_bss_frame error\n"));
 		kfree(notif_bss_info);
 		return -EINVAL;
 	}
+
+//&*&*&*JohWan1 BCM4330 solve system crash after send wl scan
+	cfg80211_put_bss(cbss);
+//&*&*&*JohWan2 BCM4330 solve system crash after send wl scan
 	kfree(notif_bss_info);
 
 	return err;
@@ -4770,6 +4908,12 @@ wl_notify_scan_status(struct wl_priv *wl, struct net_device *ndev,
 	unsigned long flags;
 
 	WL_DBG(("Enter \n"));
+//&*&*&*JohWan1 BCM4330 solve system crash after send wl scan
+	if (!wl_get_drv_status(wl, SCANNING)) {
+		WL_ERR(("scan is not ready \n"));
+		return err;
+	}
+//&*&*&*JohWan2 BCM4330 solve system crash after send wl scan
 	if (wl->iscan_on && wl->iscan_kickstart)
 		return wl_wakeup_iscan(wl_to_iscan(wl));
 

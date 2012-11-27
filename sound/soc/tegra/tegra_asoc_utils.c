@@ -247,6 +247,7 @@ int tegra_asoc_utils_init(struct tegra_asoc_utils_data *data,
 	}
 
 	ret = tegra_asoc_utils_set_rate(data, 48000, 256 * 48000);
+	//ret = tegra_asoc_utils_set_rate(data, 44100, 256 * 44100);
 	if (ret)
 		goto err_put_out1;
 

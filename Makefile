@@ -945,9 +945,11 @@ $(vmlinux-dirs): prepare scripts
 	$(Q)$(MAKE) $(build)=$@
 
 # Store (new) KERNELRELASE string in include/config/kernel.release
+# remove the localversion appendix for WLAN insmod vermagic check.
 include/config/kernel.release: include/config/auto.conf FORCE
 	$(Q)rm -f $@
-	$(Q)echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))" > $@
+	$(Q)echo $(KERNELVERSION)> $@
+
 
 
 # Things we need to do before we recursively start building the kernel

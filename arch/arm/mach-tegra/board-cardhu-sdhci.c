@@ -63,20 +63,11 @@ static struct resource wifi_resource[] = {
 	},
 };
 
-static struct platform_device broadcom_wifi_device = {
+static struct platform_device cardhu_wifi_device = {
 	.name		= "bcm4329_wlan",
 	.id		= 1,
 	.num_resources	= 1,
 	.resource	= wifi_resource,
-	.dev		= {
-		.platform_data = &cardhu_wifi_control,
-	},
-};
-
-static struct platform_device marvell_wifi_device = {
-	.name		= "mrvl8797_wlan",
-	.id		= 1,
-	.num_resources	= 0,
 	.dev		= {
 		.platform_data = &cardhu_wifi_control,
 	},
@@ -144,7 +135,7 @@ static struct tegra_sdhci_platform_data tegra_sdhci_platform_data2 = {
 #ifdef CONFIG_MMC_EMBEDDED_SDIO
 		.embedded_sdio = &embedded_sdio_data2,
 #endif
-		.built_in = 0,
+		.built_in = 1,
 	},
 #ifndef CONFIG_MMC_EMBEDDED_SDIO
 	.pm_flags = MMC_PM_KEEP_POWER,
@@ -266,7 +257,6 @@ static int cardhu_wifi_reset(int on)
 static int __init cardhu_wifi_init(void)
 {
 	int rc;
-	int commchip_id = tegra_get_commchip_id();
 
 	rc = gpio_request(CARDHU_WLAN_PWR, "wlan_power");
 	if (rc)
@@ -292,11 +282,7 @@ static int __init cardhu_wifi_init(void)
 	if (rc)
 		pr_err("WLAN_WOW gpio direction configuration failed:%d\n", rc);
 
-	if (commchip_id == COMMCHIP_MARVELL_SD8797)
-		platform_device_register(&marvell_wifi_device);
-	else
-		platform_device_register(&broadcom_wifi_device);
-
+	platform_device_register(&cardhu_wifi_device);
 	return 0;
 }
 

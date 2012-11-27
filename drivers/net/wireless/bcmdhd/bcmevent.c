@@ -96,6 +96,12 @@ const bcmevent_name_t bcmevent_names[] = {
 	{ WLC_E_ACTION_FRAME_RX, "ACTION_FRAME_RX" },
 	{ WLC_E_ACTION_FRAME_COMPLETE, "ACTION_FRAME_COMPLETE" },
 #endif
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WAI
+	{ WLC_E_WAI_STA_EVENT, "WAI_STA_EVENT" },
+	{ WLC_E_WAI_MSG, "WAI_MSG" },
+#endif /* BCMWAPI_WAI */
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 	{ WLC_E_ESCAN_RESULT, "WLC_E_ESCAN_RESULT" },
 	{ WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE, "WLC_E_AF_OFF_CHAN_COMPLETE" },
 #ifdef WLP2P

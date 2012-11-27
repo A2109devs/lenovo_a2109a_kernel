@@ -2197,7 +2197,8 @@ static void tegra_dc_underflow_handler(struct tegra_dc *dc)
 }
 
 #ifndef CONFIG_TEGRA_FPGA_PLATFORM
-static bool tegra_dc_windows_are_dirty(struct tegra_dc *dc)
+//&*&*&*BC1_120628: Nvidia patch Revert-video-tegra-dc-in-continuous-mode-mask-VBLANK
+/*static bool tegra_dc_windows_are_dirty(struct tegra_dc *dc)
 {
 #ifndef CONFIG_TEGRA_SIMULATION_PLATFORM
 	u32 val;
@@ -2207,8 +2208,8 @@ static bool tegra_dc_windows_are_dirty(struct tegra_dc *dc)
 	    return true;
 #endif
 	return false;
-}
-
+}*/
+//&*&*&*BC2_120628: Nvidia patch Revert-video-tegra-dc-in-continuous-mode-mask-VBLANK
 static void tegra_dc_trigger_windows(struct tegra_dc *dc)
 {
 	u32 val, i;
@@ -2278,13 +2279,16 @@ static void tegra_dc_continuous_irq(struct tegra_dc *dc, unsigned long status)
 		schedule_work(&dc->vblank_work);
 
 		/* All windows updated. Mask subsequent V_BLANK interrupts */
-		if (!tegra_dc_windows_are_dirty(dc)) {
+//&*&*&*BC1_120628: Nvidia patch Revert-video-tegra-dc-in-continuous-mode-mask-VBLANK
+/*		if (!tegra_dc_windows_are_dirty(dc)) {
 			u32 val;
 
 			val = tegra_dc_readl(dc, DC_CMD_INT_MASK);
 			val &= ~V_BLANK_INT;
 			tegra_dc_writel(dc, val, DC_CMD_INT_MASK);
 		}
+*/		
+//&*&*&*BC2_120628: Nvidia patch Revert-video-tegra-dc-in-continuous-mode-mask-VBLANK
 	}
 
 	if (status & FRAME_END_INT) {
@@ -3193,6 +3197,7 @@ struct nvhost_driver tegra_dc_driver = {
 	},
 	.probe = tegra_dc_probe,
 	.remove = tegra_dc_remove,
+//	.shutdown = tegra_dc_suspend,  /*20120606, JimmySu add panel power-off sequence for shutdown*/  /*20120615, JimmySu rollback for can't power-off devices*/
 #ifdef CONFIG_PM
 	.suspend = tegra_dc_suspend,
 	.resume = tegra_dc_resume,

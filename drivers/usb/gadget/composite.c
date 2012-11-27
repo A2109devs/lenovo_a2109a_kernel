@@ -1545,8 +1545,8 @@ composite_suspend(struct usb_gadget *gadget)
 		composite->suspend(cdev);
 
 	cdev->suspended = 1;
-
-	usb_gadget_vbus_draw(gadget, 2);
+	//printk("[composite.c]Enter %s-mA is %d\n",__func__, 2);
+	//usb_gadget_vbus_draw(gadget, 2);
 }
 
 static void
@@ -1570,8 +1570,11 @@ composite_resume(struct usb_gadget *gadget)
 
 		maxpower = cdev->config->bMaxPower;
 
+#if 0
 		usb_gadget_vbus_draw(gadget, maxpower ?
 			(2 * maxpower) : CONFIG_USB_GADGET_VBUS_DRAW);
+		printk("[composite.c]Enter %s-mA is %d\n",__func__, maxpower);
+#endif
 	}
 
 	cdev->suspended = 0;

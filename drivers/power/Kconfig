@@ -203,6 +203,33 @@ config BATTERY_MAX17048
 	  to operate with a single lithium cell, and MAX17049 for two lithium
 	  cells.
 
+config BATTERY_BQ27541
+	tristate "BQ27541 battery driver"
+	help
+	  Say Y here to enable support for batteries with BQ27541 (I2C/HDQ) chips.
+
+config BATTERY_BQ27541_I2C
+	bool "BQ27541 support"
+	depends on BATTERY_BQ27541
+	depends on I2C
+	default y
+	help
+	  Say Y here to enable support for batteries with BQ27541 (I2C) chips.
+
+config CL2N_FAKE_BATTERY
+	bool "CL2N fake battery"
+	depends on BATTERY_BQ27541
+	default n
+	help
+	  Say Y here to enable fake battery for power measurement work
+
+config BATTERY_BQ27541_PLATFORM
+	bool "BQ27000 support"
+	depends on BATTERY_BQ27541
+	default y
+	help
+	  Say Y here to enable support for batteries with BQ27541 (HDQ) chips.
+
 config BATTERY_Z2
 	tristate "Z2 battery driver"
 	depends on I2C && MACH_ZIPIT2

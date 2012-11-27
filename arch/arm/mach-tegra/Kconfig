@@ -21,6 +21,7 @@ config ARCH_TEGRA_2x_SOC
 	select ARCH_SUPPORTS_MSI if TEGRA_PCI
 	select PCI_MSI if TEGRA_PCI
 	select CPA
+	select ARM_ERRATA_716044
 	help
 	  Support for NVIDIA Tegra AP20 and T20 processors, based on the
 	  ARM CortexA9MP CPU and the ARM PL310 L2 cache controller
@@ -170,8 +171,7 @@ config MACH_TEGRA_ENTERPRISE
 config MACH_KAI
        bool "Kai board"
        depends on ARCH_TEGRA_3x_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5639 if SND_SOC
-       select MACH_HAS_SND_SOC_TEGRA_RT5640 if SND_SOC
+       select MACH_HAS_SND_SOC_TEGRA_TLV320AIC326X if SND_SOC
        help
          Support for NVIDIA KAI development platform
 
@@ -492,4 +492,29 @@ config TEGRA_PREPOWER_WIFI
 	default n
 	help
 	  Pre-power up the on board WiFi chip
+
+config CL2N_WAKEUP_SD_CARD
+	bool "CL2N SD CRAD WAKEUP"
+	default n
+	help
+	  Set y to support screen on wakeup
+
+config CL2N_WAKEUP_CABLE
+	bool "CL2N CABLE WAKEUP"
+	default n
+	help
+	  Set y to support screen on wakeup
+
+config CL2N_WAKEUP_WIFI
+	bool "CL2N WIFI WAKEUP"
+	default n
+	help
+	  Set y to support screen on wakeup
+
+config CL2N_WAKEUP_BT
+	bool "CL2N BT WAKEUP"
+	default n
+	help
+	  Set y to support screen on wakeup
+
 endif

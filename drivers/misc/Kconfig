@@ -562,6 +562,12 @@ config MAX1749_VIBRATOR
 	---help---
 	Adds a timed output vibrator device node for MAX1749 vibrator motor
 
+config LIS3DH_ACCELEROMETER
+	bool "LIS3DH Accelerometer driver"
+	default n
+	---help---
+	This driver is for LIS3DH Accelerometer of ST Microelectronics
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"

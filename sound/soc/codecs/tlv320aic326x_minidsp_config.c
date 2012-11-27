@@ -39,6 +39,7 @@
 #include <linux/io.h>
 #include <linux/delay.h>
 #include <linux/i2c.h>
+#include <linux/spi/spi.h>
 #include <linux/platform_device.h>
 #include <sound/soc.h>
 #include <sound/core.h>
@@ -371,18 +372,6 @@ printk("======in the config_multiconfiguration function==== \n");
 	dac_status=aic3262_read(codec,DAC_FLAG_R1);
 	printk("DAC STATUS = %x", dac_status);
 
-	#if 0
-	/* Switching off the adaptive filtering for loading the patch file*/
-	aic3262_change_book(codec, 40);
-	val1 = i2c_smbus_read_byte_data(codec->control_data, 1);
-	aic3262_write(codec, 1, (val1&0xfb));
-
-	aic3262_change_book(codec, 80);
-	val2 = i2c_smbus_read_byte_data(codec->control_data, 1);
-	aic3262_write(codec, 1, (val2&0xfb));
-
-	#endif
-
 	/*apply patches to both pages (mirrored coeffs). this works when DSP are stopped*/
 	/* to apply patches when DSPs are runnig, the 'buffer swap' has to be executed, which is
 	    done in the buffer swap section below*/
@@ -408,12 +397,7 @@ printk("======in the config_multiconfiguration function==== \n");
 		  ptransfer(codec, a_patch, a_size); /*apply patch after swapping buffer*/
               }
 
-	#if 0
-	if (a_size)
-		ptransfer	(codec, a_patch, a_size);
-	if (d_size)
-		ptransfer	(codec, d_patch, d_size);
-	#endif
+
 
 
 	return ;
@@ -430,58 +414,134 @@ printk("======in the config_multiconfiguration function==== \n");
 static int multibyte_coeff_change(struct snd_soc_codec *codec, int bk)
 {
 
-	u8 value[2], swap_reg_pre, swap_reg_post;
-	struct i2c_client *i2c;
-	i2c = codec->control_data;
+	u8 value, swap_reg_pre, swap_reg_post;
+	struct aic3262_priv *aic3262 = snd_soc_codec_get_drvdata(codec);
 
+	DBG(KERN_INFO "%s : entered\n",__func__);
+	#if 0
+	mutex_lock(&codec_io_mutex);
 	aic3262_change_book(codec, bk);
 	aic3262_change_page(codec, 0);
-
-	value[0] = 1;
-
-	if (i2c_master_send(i2c, value, 1) != 1)
-		printk(KERN_ERR "Can not write register address\n");
-	else {
-		/* Read the Value of the Page 8 Register 1 which controls the
+	mutex_unlock(&codec_io_mutex);
+	if(aic3262->bus_type == SND_SOC_SPI) {
+		/* Read the Value of the Book bk Page 0 Register 1 which controls the
 		   Adaptive Switching Mode */
-		if (i2c_master_recv(i2c, value, 1) != 1) {
-			printk(KERN_ERR "Can not read codec registers\n");
+		mutex_lock(&codec_io_mutex);
+		value[0] = codec->hw_read(codec,1);
+		mutex_unlock(&codec_io_mutex);
+		if( value[0] < 0) {
+			printk(KERN_ERR "Cannot read the codec register\n");
 			goto err;
+		} else {
+			swap_reg_pre = value[0];
+
+			/* Write the Register bit updates */
+			value[1] = value[0] | 1;
+			value[0] = 1;
+			mutex_lock(&codec_io_mutex);
+			codec->hw_write(codec, value, 2);
+			mutex_unlock(&codec_io_mutex);
+			/*before verifying for buffer_swap, make sure we give one
+				frame delay, because the buffer swap happens at the end of the frame */
+			mdelay(5);
+			/* verify buffer swap */
+			mutex_lock(&codec_io_mutex);
+			swap_reg_post = codec->hw_read(codec,1);
+			mutex_unlock(&codec_io_mutex);
+
+			if(swap_reg_post < 0) {
+				printk(KERN_ERR "cannot read the codec register\n");
+				goto err;
+			}
+			if ((swap_reg_pre == 4 && swap_reg_post == 6)
+				|| (swap_reg_pre == 6 && swap_reg_post == 4))
+				printk(KERN_INFO "Buffer swap success\n");
+			else
+				printk(KERN_ERR
+				"Buffer swap...FAILED\nswap_reg_pre=%x, swap_reg_post=%x\n",
+				swap_reg_pre, swap_reg_post);
+			mutex_lock(&codec_io_mutex);
+			aic3262_change_book(codec, 0x00);
+			mutex_unlock(&codec_io_mutex);
 		}
-		swap_reg_pre = value[0];
-
-		/* Write the Register bit updates */
-		value[1] = value[0] | 1;
+	} else {
 		value[0] = 1;
-
-		if (i2c_master_send(i2c, value, 2) != 2) {
+		mutex_lock(&codec_io_mutex);
+		if (i2c_master_send(codec->control_data, value, 1) != 1) {
+			mutex_unlock(&codec_io_mutex);
 			printk(KERN_ERR "Can not write register address\n");
-			goto err;
+		} else {
+			/* Read the Value of the Page 8 Register 1 which controls the
+			   Adaptive Switching Mode */
+			if (i2c_master_recv(codec->control_data, value, 1) != 1) {
+				printk(KERN_ERR "Can not read codec registers\n");
+				mutex_unlock(&codec_io_mutex);
+				goto err;
+			}
+			mutex_unlock(&codec_io_mutex);
+			swap_reg_pre = value[0];
+
+			/* Write the Register bit updates */
+			value[1] = value[0] | 1;
+			value[0] = 1;
+			mutex_lock(&codec_io_mutex);
+			if (i2c_master_send(codec->control_data, value, 2) != 2) {
+				printk(KERN_ERR "Can not write register address\n");
+				mutex_unlock(&codec_io_mutex);
+				goto err;
+			}
+			mutex_unlock(&codec_io_mutex);
+			/*before verifying for buffer_swap, make sure we give one
+			frame delay, because the buffer swap happens at the end of the frame */
+			mdelay(5);
+			value[0] = 1;
+			/* verify buffer swap */
+			mutex_lock(&codec_io_mutex);
+			if (i2c_master_send(codec->control_data, value, 1) != 1) {
+				printk(KERN_ERR "Can not write register address\n");
+			}
+			mutex_unlock(&codec_io_mutex);
+			/* Read the Value of the Page 8 Register 1 which controls the
+			   Adaptive Switching Mode */
+			mutex_lock(&codec_io_mutex);
+			if (i2c_master_recv(codec->control_data, &swap_reg_post, 1) != 1) {
+				printk(KERN_ERR "Can not read codec registers\n");
+			}
+			mutex_unlock(&codec_io_mutex);
+			if ((swap_reg_pre == 4 && swap_reg_post == 6)
+				|| (swap_reg_pre == 6 && swap_reg_post == 4))
+				printk(KERN_INFO "Buffer swap success\n");
+			else
+				printk(KERN_ERR
+				"Buffer swap...FAILED\nswap_reg_pre=%x, swap_reg_post=%x\n",
+				swap_reg_pre, swap_reg_post);
+			mutex_lock(&codec_io_mutex);
+			aic3262_change_book(codec, 0x00);
+			mutex_unlock(&codec_io_mutex);
+
 		}
-              /*before verifying for buffer_swap, make sure we give one
-              frame delay, because the buffer swap happens at the end of the frame */
-              mdelay(5);
-		value[0] = 1;
-		/* verify buffer swap */
-		if (i2c_master_send(i2c, value, 1) != 1)
-			printk(KERN_ERR "Can not write register address\n");
-
-		/* Read the Value of the Page 8 Register 1 which controls the
-		   Adaptive Switching Mode */
-		if (i2c_master_recv(i2c, &swap_reg_post, 1) != 1)
-			printk(KERN_ERR "Can not read codec registers\n");
-
-		if ((swap_reg_pre == 4 && swap_reg_post == 6)
-			|| (swap_reg_pre == 6 && swap_reg_post == 4))
-			printk(KERN_INFO "Buffer swap success\n");
-		else
-			printk(KERN_ERR
-			"Buffer swap...FAILED\nswap_reg_pre=%x, swap_reg_post=%x\n",
-			swap_reg_pre, swap_reg_post);
-
-		aic3262_change_book(codec, 0x00);
 	}
+#endif
+	u8 reg =0x01;
 
+	value=dsp_reg_read(codec,bk,reg);
+	swap_reg_pre =value;
+
+	value= value |1;
+	dsp_reg_write(codec,bk,reg,value);
+	mdelay(50);
+
+	swap_reg_post=dsp_reg_read(codec,bk,reg);
+
+	if((swap_reg_pre == 4 && swap_reg_post == 6)
+		||(swap_reg_pre == 6 && swap_reg_post == 4)) {
+		printk( "Buffer swap success\n");
+	}
+	else{
+		printk(KERN_ERR
+				"Buffer swap...FAILED\nswap_reg_pre=%x, swap_reg_post=%x\n",
+				swap_reg_pre, swap_reg_post);
+		}
 err:
 	return 0;
 }

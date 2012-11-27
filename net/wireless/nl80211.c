@@ -3936,13 +3936,22 @@ static bool nl80211_valid_auth_type(enum nl80211_auth_type auth_type)
 static bool nl80211_valid_wpa_versions(u32 wpa_versions)
 {
 	return !(wpa_versions & ~(NL80211_WPA_VERSION_1 |
-				  NL80211_WPA_VERSION_2));
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+				NL80211_WPA_VERSION_2 | 
+/*WAPI*/
+				NL80211_WAPI_VERSION_1 ));
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 }
 
 static bool nl80211_valid_akm_suite(u32 akm)
 {
 	return akm == WLAN_AKM_SUITE_8021X ||
-		akm == WLAN_AKM_SUITE_PSK;
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+		akm == WLAN_AKM_SUITE_PSK ||
+/* WAPI */
+		akm == WLAN_AKM_SUITE_WAPI_PSK ||
+		akm == WLAN_AKM_SUITE_WAPI_CERT;
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 }
 
 static bool nl80211_valid_cipher_suite(u32 cipher)
@@ -3951,7 +3960,13 @@ static bool nl80211_valid_cipher_suite(u32 cipher)
 		cipher == WLAN_CIPHER_SUITE_WEP104 ||
 		cipher == WLAN_CIPHER_SUITE_TKIP ||
 		cipher == WLAN_CIPHER_SUITE_CCMP ||
-		cipher == WLAN_CIPHER_SUITE_AES_CMAC;
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+		cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
+/*
+WAPI
+*/
+		cipher == WLAN_CIPHER_SUITE_SMS4;
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 }
 
 

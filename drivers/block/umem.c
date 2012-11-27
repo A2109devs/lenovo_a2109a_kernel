@@ -461,10 +461,12 @@ static void process_page(unsigned long data)
 		if (control & DMASCR_HARD_ERROR) {
 			/* error */
 			clear_bit(BIO_UPTODATE, &bio->bi_flags);
-			dev_printk(KERN_WARNING, &card->dev->dev,
+//&*&*&*SJ1_20120618
+			printk_ratelimited(KERN_WARNING, &card->dev->dev,
 				"I/O error on sector %d/%d\n",
 				le32_to_cpu(desc->local_addr)>>9,
 				le32_to_cpu(desc->transfer_size));
+//&*&*&*SJ2_20120618
 			dump_dmastat(card, control);
 		} else if ((bio->bi_rw & REQ_WRITE) &&
 			   le32_to_cpu(desc->local_addr) >> 9 ==

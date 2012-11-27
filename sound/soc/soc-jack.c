@@ -234,7 +234,9 @@ EXPORT_SYMBOL_GPL(snd_soc_jack_notifier_unregister);
 
 #ifdef CONFIG_GPIOLIB
 /* gpio detect */
-static void snd_soc_jack_gpio_detect(struct snd_soc_jack_gpio *gpio)
+//&*&*&*BC1_120524: headset can't detect after device resume
+//static void snd_soc_jack_gpio_detect(struct snd_soc_jack_gpio *gpio)
+void snd_soc_jack_gpio_detect(struct snd_soc_jack_gpio *gpio)
 {
 	struct snd_soc_jack *jack = gpio->jack;
 	int enable;

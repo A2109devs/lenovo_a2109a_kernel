@@ -31,6 +31,9 @@
 #include <linux/of_platform.h>
 #include <linux/of_gpio.h>
 #include <linux/spinlock.h>
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+#include <linux/switch.h>
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
 struct gpio_button_data {
 	const struct gpio_keys_button *button;
@@ -48,10 +51,39 @@ struct gpio_keys_drvdata {
 	struct input_dev *input;
 	struct mutex disable_lock;
 	unsigned int n_buttons;
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+	int 		lock_status;
+	struct switch_dev	sdev;
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 	int (*enable)(struct device *dev);
 	void (*disable)(struct device *dev);
 	struct gpio_button_data data[0];
 };
+
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+#define FUNCTION_NAME	"Gensor_IRQ"
+#define TEGRA_GPIO_PQ2		130
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
+
+//&*&*&*HC1_20120514
+struct input_dev *g_pwr_input = NULL;
+
+void SendPowerbuttonEvent( void )
+{
+	if (g_pwr_input != NULL) 
+	{	
+		input_report_key(g_pwr_input, KEY_POWER, 1);
+		input_report_key(g_pwr_input, KEY_POWER, 0);
+
+		input_sync(g_pwr_input);
+
+		printk("%s ...\n", __func__);
+	}	
+	else
+		printk("%s, fail !!!\n", __func__);
+}
+EXPORT_SYMBOL(SendPowerbuttonEvent);
+//&*&*&*HC2_20120514
 
 /*
  * SYSFS interface for enabling/disabling keys and switches:
@@ -645,6 +677,28 @@ static void gpio_remove_key(struct gpio_button_data *bdata)
 	if (gpio_is_valid(bdata->button->gpio))
 		gpio_free(bdata->button->gpio);
 }
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+static ssize_t print_switch_name(struct switch_dev *sdev, char *buf)
+{
+	return sprintf(buf, "%s\n", FUNCTION_NAME);
+}
+static ssize_t print_switch_state(struct switch_dev *sdev, char *buf)
+{
+	struct gpio_keys_drvdata *ddata = container_of(sdev, struct gpio_keys_drvdata , sdev);
+	return sprintf(buf, "%s\n", (ddata->lock_status ? "offline" : "online"));
+}
+
+
+static irqreturn_t process_interrupt(int irq, void *_ddata)
+{
+	struct gpio_keys_drvdata *ddata = _ddata;
+	//printk("in the process_interrupt\n");
+	ddata->lock_status= gpio_get_value(TEGRA_GPIO_PQ2); 
+	printk("ddata->lock_status : %d\n",ddata->lock_status);
+	switch_set_state(&ddata->sdev, ddata->lock_status);
+	return IRQ_HANDLED;
+}
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
 static int __devinit gpio_keys_probe(struct platform_device *pdev)
 {
@@ -722,6 +776,50 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
 			error);
 		goto fail3;
 	}
+	
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+	ddata->lock_status= gpio_get_value(TEGRA_GPIO_PQ2); //get KB_COL2 pin status
+	
+	ddata->sdev.name = FUNCTION_NAME;
+	ddata->sdev.print_name = print_switch_name;
+	ddata->sdev.print_state = print_switch_state;
+	ddata->sdev.state = 0;
+	error = switch_dev_register(&ddata->sdev);
+
+	if (error < 0)
+	{
+		printk("Error registering switch!\n");
+		goto fail4;
+	}
+	
+	error = gpio_request(TEGRA_GPIO_PQ2, "glocksensor_irq");
+	if (error < 0) {
+		dev_err(dev, "failed to request TEGRA_GPIO_PQ2  error %d\n",
+			error);
+		goto fail4;
+	}
+
+	error = gpio_direction_input(TEGRA_GPIO_PQ2);
+	if (error < 0) {
+		dev_err(dev, "failed to configure direction for TEGRA_GPIO_PQ2 error %d\n",
+			error);
+		goto fail4;
+	}
+	
+	tegra_gpio_enable(TEGRA_GPIO_PQ2);
+		
+	ddata->lock_status= gpio_get_value(TEGRA_GPIO_PQ2);
+	
+	switch_set_state(&ddata->sdev, ddata->lock_status);
+	
+	error = request_threaded_irq(gpio_to_irq(TEGRA_GPIO_PQ2),NULL, process_interrupt, IRQF_TRIGGER_FALLING |IRQF_TRIGGER_RISING, "glocksensor_irq", ddata);
+	if( error )
+	{
+		dev_err(dev, "Unable to register swith interrupt device, error: %d\n",
+			error);
+		goto fail5;
+	}
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
 	/* get current state of buttons that are connected to GPIOs */
 	for (i = 0; i < pdata->nbuttons; i++) {
@@ -731,9 +829,20 @@ static int __devinit gpio_keys_probe(struct platform_device *pdev)
 	}
 	input_sync(input);
 
+//&*&*&*HC1_20120514
+	if (input != NULL)
+		g_pwr_input = input;
+//&*&*&*HC2_20120514	
+
 	device_init_wakeup(&pdev->dev, wakeup);
 
 	return 0;
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+ fail5:
+	switch_dev_unregister(&ddata->sdev);
+ fail4:
+ 	gpio_free(TEGRA_GPIO_PQ2);
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
  fail3:
 	sysfs_remove_group(&pdev->dev.kobj, &gpio_keys_attr_group);
@@ -764,6 +873,9 @@ static int __devexit gpio_keys_remove(struct platform_device *pdev)
 
 	for (i = 0; i < ddata->n_buttons; i++)
 		gpio_remove_key(&ddata->data[i]);
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+	gpio_free(TEGRA_GPIO_PQ2);
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
 	input_unregister_device(input);
 
@@ -793,7 +905,12 @@ static int gpio_keys_suspend(struct device *dev)
 				enable_irq_wake(bdata->irq);
 		}
 	}
-
+	
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+	disable_irq(gpio_to_irq(TEGRA_GPIO_PQ2));
+	gpio_direction_input(TEGRA_GPIO_PQ2);	
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
+	
 	return 0;
 }
 
@@ -825,6 +942,12 @@ static int gpio_keys_resume(struct device *dev)
 			gpio_keys_gpio_report_event(bdata);
 	}
 	input_sync(ddata->input);
+	
+//&*&*&*CT1_20120516, add GSesor lock switch pin detection 
+	enable_irq(gpio_to_irq(TEGRA_GPIO_PQ2));
+	ddata->lock_status= gpio_get_value(TEGRA_GPIO_PQ2); 
+	switch_set_state(&ddata->sdev, ddata->lock_status);
+//&*&*&*CT2_20120516, add GSesor lock switch pin detection 
 
 	return 0;
 }

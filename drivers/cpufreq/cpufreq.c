@@ -1785,6 +1785,7 @@ no_policy:
 }
 EXPORT_SYMBOL(cpufreq_update_policy);
 
+//&*&*&*SJ1_20120613
 /*
  *	cpufreq_set_gov - set governor for a cpu
  *	@cpu: CPU whose governor needs to be changed
@@ -1821,12 +1822,20 @@ int cpufreq_set_gov(char *target_gov, unsigned int cpu)
 			ret = -EINVAL;
 			goto err_out;
 		}
-
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+    if (!strcmp(target_gov, "ondemand")) {
+			new_policy.min = cur_policy->min = 850000;
+		} else {
+			new_policy.min = cur_policy->min = 50000;
+		}
+#endif
 		ret = __cpufreq_set_policy(cur_policy, &new_policy);
 
 		cur_policy->user_policy.policy = cur_policy->policy;
 		cur_policy->user_policy.governor = cur_policy->governor;
-
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+        cur_policy->user_policy.min = cur_policy->min;
+#endif
 		unlock_policy_rwsem_write(cur_policy->cpu);
 	}
 err_out:
@@ -1834,6 +1843,7 @@ err_out:
 	return ret;
 }
 EXPORT_SYMBOL(cpufreq_set_gov);
+//&*&*&*SJ2_20120613
 
 static int __cpuinit cpufreq_cpu_callback(struct notifier_block *nfb,
 					unsigned long action, void *hcpu)
