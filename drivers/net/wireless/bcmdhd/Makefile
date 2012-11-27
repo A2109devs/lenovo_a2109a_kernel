@@ -49,7 +49,11 @@ endif
 
 ifeq ($(CONFIG_BCMDHD_CFG80211),y)
 bcmdhd-objs += wl_cfg80211.o wl_cfgp2p.o dhd_linux_mon.o
+ifeq ($(CONFIG_BCMDHD_WAPI),y)
+DHDCFLAGS += -DWL_CFG80211 -DBCMWAPI_WPI -DBCMWAPI_WAI
+else
 DHDCFLAGS += -DWL_CFG80211
+endif
 endif
 
 EXTRA_CFLAGS = $(DHDCFLAGS)

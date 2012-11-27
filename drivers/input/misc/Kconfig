@@ -565,4 +565,10 @@ config INPUT_CAPELLA_CM3217
 	help
 	  Say Y here to enable the CM3217 Ambient Light Sensor.
 
+config INPUT_SOLTEAM_JSA1127
+	tristate "JSA1127 light sensor"
+	depends on I2C
+	help
+	  Say Y here to enable the JSA1127 Ambient Light Sensor.
+
 endif

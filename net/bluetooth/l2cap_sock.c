@@ -37,6 +37,12 @@ static const struct proto_ops l2cap_sock_ops;
 static void l2cap_sock_init(struct sock *sk, struct sock *parent);
 static struct sock *l2cap_sock_alloc(struct net *net, struct socket *sock, int proto, gfp_t prio);
 
+//&*&*&* Simon : Disable the LP2-in-Idle when L2CAP CONNECTED . 06192012
+#include <linux/cpufreq.h>
+void FX_Set_LP2_IDLE(bool flag);
+extern int gMTP_Mode;
+//&*&*&* Simon : End 06192012
+
 static int l2cap_sock_bind(struct socket *sock, struct sockaddr *addr, int alen)
 {
 	struct sock *sk = sock->sk;
@@ -886,6 +892,24 @@ static void l2cap_sock_state_change_cb(void *data, int state)
 	struct sock *sk = data;
 
 	sk->sk_state = state;
+	
+	//&*&*&* Simon : Disable the LP2-in-Idle when L2CAP CONNECTED . 06192012
+	printk("**** [BT] l2cap_state = %d   ***** \n" ,sk->sk_state );
+	#if 0
+	if(state == BT_CONNECTED)
+	{
+		 gMTP_Mode = 1;
+	   FX_Set_LP2_IDLE(0);
+	   cpufreq_set_gov("ondemand", 0); //CPU0
+	}
+	else
+   {  	  
+  	 gMTP_Mode = 0;
+	   FX_Set_LP2_IDLE(1);
+	   cpufreq_set_gov("interactive", 0); //CPU0
+	}
+	#endif
+	//&*&*&* Simon : End 06192012
 }
 
 static struct l2cap_ops l2cap_chan_ops = {

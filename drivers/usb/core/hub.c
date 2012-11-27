@@ -1353,6 +1353,17 @@ descriptor_error:
 	if (hdev->speed == USB_SPEED_HIGH)
 		highspeed_hubs++;
 
+//&*&*&*SJ1_20120521, fix usb otg can't detect USB OTG devices.
+	{
+		char usb_device_name[32] = "\0";
+		sprintf(usb_device_name, "%s", dev_name(&intf->dev));
+		if ('2' == usb_device_name[0]) { /* usb2 for CL2N */
+			dev_info (&intf->dev, "disable usb%c autosuspend\n", usb_device_name[0]);
+			usb_disable_autosuspend(hdev);
+		}
+	}
+//&*&*&*SJ2_20120521
+
 	if (hub_configure(hub, endpoint) >= 0)
 		return 0;
 

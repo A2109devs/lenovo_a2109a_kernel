@@ -214,9 +214,15 @@ static int tegra_cpuidle_pm_notify(struct notifier_block *nb,
 {
 #ifdef CONFIG_PM_SLEEP
 	if (event == PM_SUSPEND_PREPARE)
+	{
+		printk("**** [Simon] lp2_disabled_by_suspend = true *****\n");
 		lp2_disabled_by_suspend = true;
+	}
 	else if (event == PM_POST_SUSPEND)
+	{
+		printk("**** [Simon] lp2_disabled_by_suspend = false *****\n");
 		lp2_disabled_by_suspend = false;
+	}
 #endif
 
 	return NOTIFY_OK;
@@ -320,3 +326,13 @@ static int __init tegra_cpuidle_debug_init(void)
 
 late_initcall(tegra_cpuidle_debug_init);
 #endif
+
+//&*&*&* Simon : Provide an API for enable/disable lp2_in_idle . 06192012
+void FX_Set_LP2_IDLE(bool flag)
+{
+	 lp2_in_idle = flag ;
+}
+
+EXPORT_SYMBOL(FX_Set_LP2_IDLE);
+
+//&*&*&* Simon : End 06192012

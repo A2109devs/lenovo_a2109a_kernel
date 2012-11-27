@@ -67,8 +67,14 @@
 #define POLARITY_LOW 0
 #define POLARITY_HIGH 1
 
+//&*&*&*HC1_20120529
+// BT_ENABLE_IRQ_WAKE setting must depend on  CONFIG_CL2N_WAKEUP_BT
+// to eliminate unexpected power consumption
+#ifdef CONFIG_CL2N_WAKEUP_BT
 /* enable/disable wake-on-bluetooth */
 #define BT_ENABLE_IRQ_WAKE 1
+#endif
+//&*&*&*HC2_20120529
 
 struct bluesleep_info {
 	unsigned host_wake;

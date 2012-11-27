@@ -40,8 +40,8 @@
  * if enabled.
  * Multibyte should be used for production codes where performance is priority
  */
-//#define MULTIBYTE_I2C
-#undef MULTIBYTE_I2C
+#define MULTIBYTE_I2C
+/* #undef MULTIBYTE_I2C */
 
 typedef struct {
 	u8 reg_off;
@@ -103,9 +103,14 @@ typedef struct {
 	char burst_array[129];
 	int burst_size;
 	int current_loc;
-	int book_change;CONFIG_MINI_DSP
+	int book_change;
 	u8 book_no;
 } minidsp_parser_data;
+/* SPI multi byte transfer buffer */
+typedef struct {
+	u8 *buf;
+	int len;
+} spi_buf;
 
 /* I2c Page Change Structure */
 typedef struct {
@@ -124,5 +129,9 @@ minidsp_i2c_multibyte_transfer(struct snd_soc_codec *, reg_value *, int);
 extern int byte_i2c_array_transfer(struct snd_soc_codec *, reg_value *, int);
 extern void minidsp_multiconfig(struct snd_soc_codec *,reg_value *, int ,reg_value *, int );
 extern int reg_def_conf(struct snd_soc_codec *);
+extern int dsp_reg_write (struct snd_soc_codec *codec , u8 book, unsigned int reg, unsigned int val);
+extern unsigned  int dsp_reg_read (struct snd_soc_codec *codec , u8 book, unsigned int reg);
+extern int dsp_reg_update_bits(struct snd_soc_codec *codec , u8 book,
+		unsigned int reg,unsigned int mask, unsigned int val);
 
 #endif

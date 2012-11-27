@@ -635,8 +635,10 @@ static int mmc_blk_cmd_recovery(struct mmc_card *card, struct request *req,
 			break;
 
 		prev_cmd_status_valid = false;
-		pr_err("%s: error %d sending status command, %sing\n",
+//&*&*&*SJ1_20120618
+		pr_debug(KERN_ERR "%s: error %d sending status command, %sing\n",
 		       req->rq_disk->disk_name, err, retry ? "retry" : "abort");
+//&*&*&*SJ2_20120618
 	}
 
 	/* We couldn't get a response from the card.  Give up. */
@@ -875,8 +877,10 @@ static int mmc_blk_err_check(struct mmc_card *card,
 		do {
 			int err = get_card_status(card, &status, 5);
 			if (err) {
-				printk(KERN_ERR "%s: error %d requesting status\n",
+//&*&*&*SJ1_20120618
+				pr_debug(KERN_ERR "%s: error %d requesting status\n",
 				       req->rq_disk->disk_name, err);
+//&*&*&*SJ2_20120618
 				return MMC_BLK_CMD_ERR;
 			}
 			/*

@@ -84,3 +84,8 @@ config BCMDHD_CUSTOM_REGULATORY_DOMAIN
 	default y
 	---help---
 	Use Custom Regulatory Domain set by driver.
+config BCMDHD_WAPI
+	bool "Enable BCMDHD_WAPI support"
+	depends on BCMDHD
+	help
+	  Enables WAPI support

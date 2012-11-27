@@ -859,7 +859,7 @@ static void utmi_phy_clk_disable(struct tegra_usb_phy *phy)
 	val |= HOSTPC1_DEVLC_PHCD;
 	writel(val, base + HOSTPC1_DEVLC);
 #endif
-	if (phy->hotplug) {
+	if (phy->instance == 2) {
 		val = readl(base + USB_SUSP_CTRL);
 		val |= USB_PHY_CLK_VALID_INT_ENB;
 		writel(val, base + USB_SUSP_CTRL);
@@ -2500,7 +2500,7 @@ struct tegra_usb_phy *tegra_usb_phy_open(int instance, void __iomem *regs,
 	int i;
 	int err;
 #ifndef CONFIG_ARCH_TEGRA_2x_SOC
-	struct tegra_uhsic_config *uhsic_config;
+	struct tegra_ulpi_config *uhsic_config;
 	int reset_gpio, enable_gpio;
 #endif
 

@@ -20,6 +20,12 @@
 
 #include <linux/ioctl.h>
 
+//&*&*&*SJ1_20120613
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+extern int gMTP_Mode;
+#endif
+//&*&*&*SJ2_20120613
+
 #ifdef __KERNEL__
 
 struct mtp_data_header {

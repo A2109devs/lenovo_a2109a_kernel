@@ -30,6 +30,10 @@
 
 #include "pm-irq.h"
 
+//&*&*&*HC1_20120514
+#include <linux/wakeup-source.h>
+//&*&*&*HC2_20120514
+
 #define PMC_CTRL		0x0
 #define PMC_CTRL_LATCH_WAKEUPS	(1 << 5)
 #define PMC_WAKE_MASK		0xc
@@ -237,7 +241,9 @@ static void tegra_pm_irq_syscore_resume_helper(
 static void tegra_pm_irq_syscore_resume(void)
 {
 	unsigned long long wake_status = read_pmc_wake_status();
-
+//&*&*&*HC1_20120514
+	g_tegra_wk_status = wake_status;
+//&*&*&*HC2_20120514
 	pr_info(" legacy wake status=0x%x\n", (u32)wake_status);
 	tegra_pm_irq_syscore_resume_helper((unsigned long)wake_status, 0);
 #ifndef CONFIG_ARCH_TEGRA_2x_SOC
@@ -276,8 +282,12 @@ static int tegra_pm_irq_syscore_suspend(void)
 	lvl &= tegra_lp0_wake_level_any;
 
 	wake_level = lvl | tegra_lp0_wake_level;
-	wake_enb = tegra_lp0_wake_enb;
 
+	//&*&*&*AL2_20120625 masked wakeup of usb utpim
+	//wake_enb = tegra_lp0_wake_enb;
+	wake_enb = tegra_lp0_wake_enb & (0x7FFFFFFFFF);
+	//&*&*&*AL2_20120625 masked wakeup of usb utpim
+	
 	if (debug_lp0) {
 		wake_level = lvl ^ status;
 		wake_enb = 0xffffffff;

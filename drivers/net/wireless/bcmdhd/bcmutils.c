@@ -1592,6 +1592,11 @@ static const char *crypto_algo_names[] = {
 	"UNDEF",
 	"UNDEF",
 	"UNDEF",
+//&*&*&*JohWan1 BCM4330 WAPI patch from Broadcom
+#ifdef BCMWAPI_WPI
+	"WAPI",
+#endif /* BCMWAPI_WPI */
+//&*&*&*JohWan2 BCM4330 WAPI patch from Broadcom
 	"UNDEF"
 };
 

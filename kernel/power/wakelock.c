@@ -24,6 +24,10 @@
 #endif
 #include "power.h"
 
+//&*&*&*HC1_20120514
+#include <linux/wakeup-source.h>
+//&*&*&*HC2_20120514
+
 enum {
 	DEBUG_EXIT_SUSPEND = 1U << 0,
 	DEBUG_WAKEUP = 1U << 1,
@@ -296,6 +300,10 @@ static void suspend(struct work_struct *work)
 			tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
 			tm.tm_hour, tm.tm_min, tm.tm_sec, ts_exit.tv_nsec);
 	}
+	
+//&*&*&*HC1_20120514
+	tegra3_get_wakeup_reason();
+//&*&*&*HC2_20120514
 
 	if (ts_exit.tv_sec - ts_entry.tv_sec <= 1) {
 		++suspend_short_count;

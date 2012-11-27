@@ -28,6 +28,9 @@
 #include <mach/thermal.h>
 #include <mach/edp.h>
 #include <linux/slab.h>
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
+#include <linux/suspend.h>
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 
 #include "clock.h"
 #include "cpu-tegra.h"
@@ -65,6 +68,10 @@ static struct tegra_thermal thermal_state = {
 #ifndef CONFIG_TEGRA_THERMAL_SYSFS
 static bool throttle_enb;
 #endif
+
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
+static bool tegra_thermal_suspend;
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
 #ifdef CONFIG_TEGRA_EDP_LIMITS
 static inline long edp2tj(struct tegra_thermal *thermal,
@@ -110,7 +117,11 @@ static int tegra_thermal_zone_get_temp(struct thermal_zone_device *thz,
 					unsigned long *temp)
 {
 	struct tegra_thermal *thermal = thz->devdata;
-	thermal->device->get_temp(thermal->device->data, temp);
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+//	thermal->device->get_temp(thermal->device->data, temp);
+	if (!tegra_thermal_suspend)
+		thermal->device->get_temp(thermal->device->data, temp);
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
 	return 0;
 }
@@ -152,6 +163,26 @@ static struct thermal_zone_device_ops tegra_thermal_zone_ops = {
 };
 #endif
 
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+static int tegra_thermal_pm_notify(struct notifier_block *nb,
+		unsigned long event, void *data)
+{
+       switch (event) {
+       case PM_SUSPEND_PREPARE:
+	       tegra_thermal_suspend = true;
+	       break;
+       case PM_POST_SUSPEND:
+		tegra_thermal_suspend = false;
+		break;
+       }
+       return NOTIFY_OK;
+};
+
+static struct notifier_block tegra_thermal_nb = {
+	.notifier_call = tegra_thermal_pm_notify,
+};
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+
 /* The thermal sysfs handles notifying the throttling
  * cooling device */
 #ifndef CONFIG_TEGRA_THERMAL_SYSFS
@@ -190,7 +221,11 @@ void tegra_thermal_alert(void *data)
 #ifdef CONFIG_TEGRA_THERMAL_SYSFS
 	if (thermal->thz) {
 		if (!thermal->thz->passive)
-			thermal_zone_device_update(thermal->thz);
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)				
+//			thermal_zone_device_update(thermal->thz);
+			if (!tegra_thermal_suspend)
+				thermal_zone_device_update(thermal->thz);
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)			
 	}
 #endif
 
@@ -349,11 +384,19 @@ int __init tegra_thermal_init(struct tegra_thermal_data *data)
 	thermal_state.temp_shutdown_tj = data->temp_shutdown +
 						data->temp_offset;
 
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+	register_pm_notifier(&tegra_thermal_nb);
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+
 	return 0;
 }
 
 int tegra_thermal_exit(void)
 {
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)	
+	unregister_pm_notifier(&tegra_thermal_nb);
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)	
+
 #ifdef CONFIG_TEGRA_THERMAL_SYSFS
 	if (thermal_state.thz)
 		thermal_zone_device_unregister(thermal_state.thz);

@@ -33,6 +33,13 @@
 
 #include "sdhci-pltfm.h"
 
+//&*&*&*HC1_20120514
+#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+#include <linux/wakeup-source.h>
+#include <linux/earlysuspend.h>
+#endif
+//&*&*&*HC2_20120514
+
 #define SDHCI_VENDOR_CLOCK_CNTRL	0x100
 #define SDHCI_VENDOR_CLOCK_CNTRL_SDMMC_CLK	0x1
 #define SDHCI_VENDOR_CLOCK_CNTRL_PADPIPE_CLKEN_OVERRIDE	0x8
@@ -112,6 +119,15 @@ struct tegra_sdhci_host {
 	struct tegra_io_dpd *dpd;
 	bool card_present;
 	bool is_rail_enabled;
+//&*&*&*HC1_20120514
+	#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+	#ifdef CONFIG_HAS_EARLYSUSPEND
+	struct early_suspend early_suspend;	
+	#endif
+	bool enter_early_suspend;
+	bool wakeup_event;
+	#endif
+//&*&*&*HC2_20120514	
 };
 
 static u32 tegra_sdhci_readl(struct sdhci_host *host, int reg)
@@ -327,6 +343,17 @@ static irqreturn_t carddetect_irq(int irq, void *data)
 			tegra_host->is_rail_enabled = 0;
                 }
 	}
+
+//&*&*&*HC1_20120514
+	#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+	printk("%s, card [%s]\n", __func__, tegra_host->card_present? "IN":"OUT");
+
+	if (tegra_host->enter_early_suspend == 1 && tegra_host->wakeup_event == 0) {
+		SendPowerbuttonEvent();
+		tegra_host->wakeup_event = 1;
+	}
+	#endif
+//&*&*&*HC2_20120514	
 
 	tasklet_schedule(&sdhost->card_tasklet);
 	return IRQ_HANDLED;
@@ -828,6 +855,12 @@ static int tegra_sdhci_suspend(struct sdhci_host *sdhci, pm_message_t state)
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(sdhci);
 	struct tegra_sdhci_host *tegra_host = pltfm_host->priv;
 
+//&*&*&*HC1_20120514
+	#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+	tegra_host->enter_early_suspend = 0;	
+	#endif
+//&*&*&*HC2_20120514
+
 	tegra_sdhci_set_clock(sdhci, 0);
 
 	/* Disable the power rails if any */
@@ -907,6 +940,33 @@ static struct sdhci_pltfm_data sdhci_tegra_pdata = {
 		  SDHCI_QUIRK_BROKEN_CARD_DETECTION,
 	.ops  = &tegra_sdhci_ops,
 };
+
+//&*&*&*HC1_20120514
+#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void tegra_hsmmc_early_suspend(struct early_suspend *handler)
+{
+	struct tegra_sdhci_host	 *tegra_host;
+
+	printk("Enter %s.\n", __func__);
+	tegra_host = container_of(handler, struct tegra_sdhci_host, early_suspend);
+	tegra_host->enter_early_suspend = 1;
+
+}
+
+static void tegra_hsmmc_late_resume(struct early_suspend *handler)
+{
+	struct tegra_sdhci_host	 *tegra_host;
+
+	printk("Enter %s.\n", __func__);
+	tegra_host = container_of(handler, struct tegra_sdhci_host, early_suspend);
+	tegra_host->enter_early_suspend = 0;
+	tegra_host->wakeup_event = 0;
+
+}
+#endif
+#endif
+//&*&*&*HC2_20120514
 
 static int __devinit sdhci_tegra_probe(struct platform_device *pdev)
 {
@@ -1101,6 +1161,20 @@ static int __devinit sdhci_tegra_probe(struct platform_device *pdev)
 	tegra_sdhost_std_freq = TEGRA3_SDHOST_STD_FREQ;
 #endif
 
+//&*&*&*HC1_20120514
+#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+	tegra_host->wakeup_event = 0;
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	if (gpio_is_valid(plat->cd_gpio)) {
+		printk("%s, [%s] register early suspend\n", __func__, host->hw_name);
+		tegra_host->early_suspend.suspend = tegra_hsmmc_early_suspend;
+		tegra_host->early_suspend.resume = tegra_hsmmc_late_resume;
+		register_early_suspend(&tegra_host->early_suspend);
+	}	
+#endif
+#endif
+//&*&*&*HC2_20120514
+
 	rc = sdhci_add_host(host);
 	if (rc)
 		goto err_add_host;
@@ -1109,6 +1183,15 @@ static int __devinit sdhci_tegra_probe(struct platform_device *pdev)
 
 err_add_host:
 	clk_disable(pltfm_host->clk);
+//&*&*&*HC1_20120514
+	#ifdef CONFIG_CL2N_WAKEUP_SD_CARD
+	#ifdef CONFIG_HAS_EARLYSUSPEND
+	if (gpio_is_valid(plat->cd_gpio)) {
+		unregister_early_suspend(&tegra_host->early_suspend);
+	}
+	#endif
+	#endif
+//&*&*&*HC2_20120514	
 err_clk_put:
 	clk_put(pltfm_host->clk);
 err_clk_get:

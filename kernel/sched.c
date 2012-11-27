@@ -6223,6 +6223,14 @@ static void migrate_tasks(unsigned int dead_cpu)
 	 */
 	rq->stop = NULL;
 
+//&*&*&*HC1_20120625, merge NV's patch for bug 976709
+	/*
+	 * Ensure rt_rq is not throttled so its threads can be migrated using
+	 * pick_next_task_rt
+	 */
+	rq->rt.rt_throttled = 0;
+//&*&*&*HC2_20120625, merge NV's patch for bug 976709
+
 	for ( ; ; ) {
 		/*
 		 * There's this thread running, bail when that's the only

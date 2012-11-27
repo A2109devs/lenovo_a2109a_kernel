@@ -407,8 +407,22 @@ static struct regulator_consumer_supply fixed_reg_en_3v3_fuse_supply[] = {
 	REGULATOR_SUPPLY("vdd_fuse", NULL),
 };
 
-static struct regulator_consumer_supply fixed_reg_cdc_en_supply[] = {
+//&*&*&*BC1_120515: disalbe cdc_en function
+/*static struct regulator_consumer_supply fixed_reg_cdc_en_supply[] = {
 	REGULATOR_SUPPLY("cdc_en", NULL),
+};*/
+//&*&*&*BC2_120515: disalbe cdc_en function
+
+static struct regulator_consumer_supply fixed_reg_vdd_vbrtr_supply[] = {
+	REGULATOR_SUPPLY("vdd_vbrtr", NULL),
+};
+
+static struct regulator_consumer_supply fixed_reg_en_cam1_ldo_supply[] = {
+	REGULATOR_SUPPLY("vdd_cam1", NULL),
+};
+
+static struct regulator_consumer_supply fixed_reg_en_cam2_ldo_supply[] = {
+	REGULATOR_SUPPLY("vdd_cam2", NULL),
 };
 
 /* Macro for defining fixed regulator sub device data */
@@ -470,8 +484,10 @@ FIXED_REG(9,  en_vdd_sdmmc1_a00, en_vdd_sdmmc1,		FIXED_SUPPLY(en_3v3_sys_a00),
 	0,	0,	TEGRA_GPIO_PC6,				true,	0,	3300);
 FIXED_REG(10, en_3v3_fuse_a00,	en_3v3_fuse,		FIXED_SUPPLY(en_3v3_sys_a00),
 	0,	0,	TEGRA_GPIO_PC1,				true,	0,	3300);
-FIXED_REG(11, cdc_en_a00,	cdc_en,			max77663_rails(sd2),
-	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);
+//&*&*&*BC1_120515: disalbe cdc_en function	
+/*FIXED_REG(11, cdc_en_a00,	cdc_en,			max77663_rails(sd2),
+	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);*/
+//&*&*&*BC2_120515: disalbe cdc_en function
 
 /* A01 specific */
 FIXED_REG(1, en_3v3_sys_a01,	en_3v3_sys_a01,		NULL,
@@ -483,19 +499,28 @@ FIXED_REG(3, en_1v8_cam_a01,	en_1v8_cam,		max77663_rails(sd2),
 FIXED_REG(4, en_vddio_vid_a01,	en_vddio_vid,		NULL,
 	0,	0,	TEGRA_GPIO_PB2,				true,	0,	5000);
 FIXED_REG(5, en_3v3_modem_a01,	en_3v3_modem,		NULL,
-	1,	1,	TEGRA_GPIO_PP0,				true,	0,	3300);
+	0,	0,	TEGRA_GPIO_PP0,				true,	0,	3300);
 FIXED_REG(6, en_vdd_pnl_a01,	en_vdd_pnl,		FIXED_SUPPLY(en_3v3_sys_a01),
-	0,	0,	TEGRA_GPIO_PW1,				true,	0,	3300);
-FIXED_REG(7, en_cam3_ldo_a01,	en_cam3_ldo,		FIXED_SUPPLY(en_3v3_sys_a01),
-	0,	0,	TEGRA_GPIO_PR7,				true,	0,	3300);
+	0,	1,	TEGRA_GPIO_PW1,				true,	0,	3300);
+FIXED_REG(7, en_cam2_ldo_a01,	en_cam2_ldo,		NULL,
+	0,	0,	TEGRA_GPIO_PR7,				true,	0,	2800);
 FIXED_REG(8, en_vdd_com_a01,	en_vdd_com,		FIXED_SUPPLY(en_3v3_sys_a01),
 	1,	0,	TEGRA_GPIO_PD0,				true,	0,	3300);
 FIXED_REG(9,  en_vdd_sdmmc1_a01, en_vdd_sdmmc1,		FIXED_SUPPLY(en_3v3_sys_a01),
 	0,	0,	TEGRA_GPIO_PC6,				true,	0,	3300);
 FIXED_REG(10, en_3v3_fuse_a01,	en_3v3_fuse,		FIXED_SUPPLY(en_3v3_sys_a01),
 	0,	0,	TEGRA_GPIO_PC1,				true,	0,	3300);
-FIXED_REG(11, cdc_en_a01,	cdc_en,			max77663_rails(sd2),
-	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);
+	
+//&*&*&*BC1_120515: disalbe cdc_en function	
+/*FIXED_REG(11, cdc_en_a01,	cdc_en,			max77663_rails(sd2),
+	0,	1,	TEGRA_GPIO_PX2,				true,	0,	1200);*/
+//&*&*&*BC2_120515: disalbe cdc_en function
+
+FIXED_REG(12, vdd_vbrtr,	vdd_vbrtr,		NULL,
+	0,	0,	MAX77663_GPIO_BASE + MAX77663_GPIO0,	true,	0,	3300);
+
+FIXED_REG(13, en_cam1_ldo_a01,	en_cam1_ldo,		NULL,
+	0,	0,	TEGRA_GPIO_PR6,				true,	0,	2800);
 
 /*
  * Creating the fixed regulator device tables
@@ -515,7 +540,9 @@ FIXED_REG(11, cdc_en_a01,	cdc_en,			max77663_rails(sd2),
 	ADD_FIXED_REG(en_vdd_com_a00),		\
 	ADD_FIXED_REG(en_vdd_sdmmc1_a00),	\
 	ADD_FIXED_REG(en_3v3_fuse_a00),		\
-	ADD_FIXED_REG(cdc_en_a00),		\
+//&*&*&*BC1_120515: disalbe cdc_en function	
+//	ADD_FIXED_REG(cdc_en_a00),		\
+//&*&*&*BC2_120515: disalbe cdc_en function
 
 /* A01 specific */
 #define E1565_A01_FIXED_REG \
@@ -525,11 +552,15 @@ FIXED_REG(11, cdc_en_a01,	cdc_en,			max77663_rails(sd2),
 	ADD_FIXED_REG(en_vddio_vid_a01),	\
 	ADD_FIXED_REG(en_3v3_modem_a01),	\
 	ADD_FIXED_REG(en_vdd_pnl_a01),		\
-	ADD_FIXED_REG(en_cam3_ldo_a01),		\
+	ADD_FIXED_REG(en_cam2_ldo_a01),		\
 	ADD_FIXED_REG(en_vdd_com_a01),		\
 	ADD_FIXED_REG(en_vdd_sdmmc1_a01),	\
 	ADD_FIXED_REG(en_3v3_fuse_a01),		\
-	ADD_FIXED_REG(cdc_en_a01),		\
+	ADD_FIXED_REG(vdd_vbrtr),		\
+	ADD_FIXED_REG(en_cam1_ldo_a01),		\
+//&*&*&*BC1_120515: disalbe cdc_en function	
+//	ADD_FIXED_REG(cdc_en_a01),		\
+//&*&*&*BC2_120515: disalbe cdc_en function
 
 /* Gpio switch regulator platform data for Kai A00 */
 static struct platform_device *fixed_reg_devs_a00[] = {
@@ -625,16 +656,21 @@ int __init kai_suspend_init(void)
 	return 0;
 }
 
+//&*&*&*HC1_20120618, add NV patch (bug id #999175)
 static struct tegra_tsensor_pmu_data  tpdata = {
-	.poweroff_reg_addr = 0x3F,
-	.poweroff_reg_data = 0x80,
+	//.poweroff_reg_addr = 0x3F,
+	//.poweroff_reg_data = 0x80,
+	.poweroff_reg_addr = 0x41,
+	.poweroff_reg_data = 0xe0,	
 	.reset_tegra = 1,
 	.controller_type = 0,
 	.i2c_controller_id = 4,
 	.pinmux = 0,
 	.pmu_16bit_ops = 0,
-	.pmu_i2c_addr = 0x2D,
+	//.pmu_i2c_addr = 0x2D,
+	.pmu_i2c_addr = 0x3c,	
 };
+//&*&*&*HC2_20120618, add NV patch (bug id #999175)
 
 void __init kai_tsensor_init(void)
 {

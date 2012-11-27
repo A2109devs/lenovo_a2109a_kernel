@@ -36,6 +36,14 @@
 #include <linux/usb/ch9.h>
 #include <linux/usb/f_mtp.h>
 
+//&*&*&*SJ1_20120613
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+#include <linux/cpufreq.h>
+
+int gMTP_Mode = 0;
+#endif
+//&*&*&*SJ2_20120613
+
 #define MTP_BULK_BUFFER_SIZE       16384
 #define INTR_BUFFER_SIZE           28
 
@@ -945,6 +953,14 @@ out:
 static int mtp_open(struct inode *ip, struct file *fp)
 {
 	printk(KERN_INFO "mtp_open\n");
+//&*&*&*SJ1_20120613
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+  gMTP_Mode = 1;
+  printk("[MTP/PTP]Set CPU0 scaling governor -> ondemand\n");
+  cpufreq_set_gov("ondemand", 0); //CPU0
+#endif
+//&*&*&*SJ2_20120613
+
 	if (mtp_lock(&_mtp_dev->open_excl))
 		return -EBUSY;
 
@@ -953,6 +969,7 @@ static int mtp_open(struct inode *ip, struct file *fp)
 		_mtp_dev->state = STATE_READY;
 
 	fp->private_data = _mtp_dev;
+
 	return 0;
 }
 
@@ -961,6 +978,15 @@ static int mtp_release(struct inode *ip, struct file *fp)
 	printk(KERN_INFO "mtp_release\n");
 
 	mtp_unlock(&_mtp_dev->open_excl);
+
+//&*&*&*SJ1_20120613
+#ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
+  gMTP_Mode = 0;
+  printk("[MTP/PTP]Set CPU0 scaling governor -> interactive\n");
+  cpufreq_set_gov("interactive", 0); //CPU0
+#endif
+//&*&*&*SJ2_20120613
+
 	return 0;
 }
 

@@ -16,7 +16,7 @@
  *
  * History:
  *
- * Rev 0.1 	 Tiload support          16-09-2010
+ * Rev 0.1 	 Tiload support    		Mistral         16-09-2010
  *
  *          The Tiload programming support is added to AIC3262.
  *
@@ -37,14 +37,12 @@
 #include <linux/platform_device.h>
 #include <sound/soc.h>
 #include <sound/control.h>
+#include <linux/slab.h>
 
 #include "tlv320aic326x.h"
 #include "aic326x_tiload.h"
 
 /* enable debug prints in the driver */
-#define DEBUG
-//#undef DEBUG
-
 #ifdef DEBUG
 #define dprintk(x...) 	printk(x)
 #else
@@ -53,15 +51,10 @@
 
 #ifdef AIC3262_TiLoad
 
-/* Function prototypes */
-#ifdef REG_DUMP_aic3262
-static void aic3262_dump_page(struct i2c_client *i2c, u8 page);
-#endif
-
 /* externs */
-extern int aic3262_change_page(struct snd_soc_codec *codec, u8 new_page);
-extern int aic3262_change_book(struct snd_soc_codec *codec, u8 new_book);
-extern int aic3262_write(struct snd_soc_codec *codec, u16 reg, u8 value);
+extern unsigned int aic3262_spi_series_read(struct snd_soc_codec *codec,
+		unsigned int reg, const char *pbuf, int count);
+
 int aic3262_driver_init(struct snd_soc_codec *codec);
 /************** Dynamic aic3262 driver, TI LOAD support  ***************/
 
@@ -72,35 +65,9 @@ static struct snd_soc_codec *aic3262_codec;
 struct class *tiload_class;
 static unsigned int magic_num = 0xE0;
 
+
+
 /******************************** Debug section *****************************/
-
-#ifdef REG_DUMP_aic3262
-/*
- *----------------------------------------------------------------------------
- * Function : aic3262_dump_page
- * Purpose  : Read and display one codec register page, for debugging purpose
- *----------------------------------------------------------------------------
- */
-static void aic3262_dump_page(struct i2c_client *i2c, u8 page)
-{
-	int i;
-	u8 data;
-	u8 test_page_array[8];
-
-	dprintk("TiLoad DRIVER : %s\n", __FUNCTION__);
-	aic3262_change_page(codec, page);
-
-	data = 0x0;
-
-	i2c_master_send(i2c, data, 1);
-	i2c_master_recv(i2c, test_page_array, 8);
-
-	printk("\n------- aic3262 PAGE %d DUMP --------\n", page);
-	for (i = 0; i < 8; i++) {
-		printk(" [ %d ] = 0x%x\n", i, test_page_array[i]);
-	}
-}
-#endif
 
 /*
  *----------------------------------------------------------------------------
@@ -146,13 +113,12 @@ static int tiload_release(struct inode *in, struct file *filp)
 static ssize_t tiload_read(struct file *file, char __user * buf,
 			   size_t count, loff_t * offset)
 {
-	static char rd_data[8];
+	static char rd_data[128];
 	char reg_addr;
 	size_t size;
-	#ifdef DEBUG
+#ifdef DEBUG
 	int i;
-	#endif
-	struct i2c_client *i2c = aic3262_codec->control_data;
+#endif
 
 	dprintk("TiLoad DRIVER : %s\n", __FUNCTION__);
 	if (count > 128) {
@@ -167,24 +133,17 @@ static ssize_t tiload_read(struct file *file, char __user * buf,
 		return -1;
 	}
 	/* Send the address to device thats is to be read */
-
-	if (i2c_master_send(i2c, &reg_addr, 1) != 1) {
-		dprintk("Can not write register address\n");
-		return -1;
-	}
-	/* read the codec device registers */
-	size = i2c_master_recv(i2c, rd_data, count);
+	mutex_lock(&codec_io_mutex);
+	aic3262_spi_series_read(aic3262_codec, reg_addr, rd_data, count);
+	mutex_unlock(&codec_io_mutex);
 #ifdef DEBUG
-	printk(KERN_ERR "read size = %d, reg_addr= %x , count = %d\n",
-	       (int)size, reg_addr, (int)count);
-	for (i = 0; i < (int)size; i++) {
-		printk(KERN_ERR "rd_data[%d]=%x\n", i, rd_data[i]);
+	printk("[tiload]read reg_addr=%x, count=%x\n", reg_addr, count);
+	for (i=0; i<count; i++)
+	{
+	    printk("[tiload]read rd_data[%d]=%x\n", reg_addr+i, rd_data[i]);
 	}
 #endif
-	if (size != count) {
-		printk("read %d registers from the codec\n", size);
-	}
-
+	size = count;
 	if (copy_to_user(buf, rd_data, size) != 0) {
 		dprintk("copy_to_user failed\n");
 		return -1;
@@ -203,13 +162,13 @@ static ssize_t tiload_read(struct file *file, char __user * buf,
 static ssize_t tiload_write(struct file *file, const char __user * buf,
 			    size_t count, loff_t * offset)
 {
-	static char wr_data[8];
+	static char wr_data[128];
 	u8 pg_no;
-	#ifdef DEBUG
+#ifdef DEBUG
 	int i;
-	#endif
-	struct i2c_client *i2c = aic3262_codec->control_data;
+#endif
 	struct aic3262_priv *aic3262_private = snd_soc_codec_get_drvdata(aic3262_codec);
+        int ret = 0;
 
 	dprintk("TiLoad DRIVER : %s\n", __FUNCTION__);
 	/* copy buffer from user space  */
@@ -218,33 +177,75 @@ static ssize_t tiload_write(struct file *file, const char __user * buf,
 		return -1;
 	}
 #ifdef DEBUG
-	printk(KERN_ERR "write size = %d\n", (int)count);
+	printk("[tiload] write size = %d\n", (int)count);
 	for (i = 0; i < (int)count; i++) {
-		printk(KERN_INFO "\nwr_data[%d]=%x\n", i, wr_data[i]);
+		printk("[tiload]write wr_data[%d]=%x\n", i, wr_data[i]);
 	}
 #endif
 	if (wr_data[0] == 0) {
+		mutex_lock(&codec_io_mutex);
 		aic3262_change_page(aic3262_codec, wr_data[1]);
+		mutex_unlock(&codec_io_mutex);
 		return count;
 	}
 	pg_no = aic3262_private->page_no;
 
 	if ((wr_data[0] == 127) && (pg_no == 0)) {
+		mutex_lock(&codec_io_mutex);
 		aic3262_change_book(aic3262_codec, wr_data[1]);
+		mutex_unlock(&codec_io_mutex);
 		return count;
 	}
-	return i2c_master_send(i2c, wr_data, count);
+
+	mutex_lock(&codec_io_mutex);
+	if (0 == aic3262_codec->hw_write(aic3262_codec, wr_data, count))
+	{
+		ret = count;
+	}
+	else
+	{
+	    ret = 0;
+	}
+	mutex_unlock(&codec_io_mutex);
+	return ret;
 }
 
-static int tiload_ioctl( struct file *filp,
+#define codec_page_size 128
+#define PAGE_NUM 5
+/*
+ *----------------------------------------------------------------------------
+ * Function : aic3262_dump_page
+ * Purpose  : Read and display one codec register page, for debugging purpose
+ *----------------------------------------------------------------------------
+ */
+static void aic3262_dump_page(struct snd_soc_codec *codec, u8 page, u8 *buf)
+{
+	int i;
+	mutex_lock(&codec_io_mutex);
+	aic3262_change_page(codec, page);
+	aic3262_spi_series_read(codec, 0, buf, codec_page_size);
+	mutex_unlock(&codec_io_mutex);
+#ifdef DEDUG
+	printk("[tiload]read reg_addr=%x, count=%x\n", 0, codec_page_size);
+	for (i=0; i< codec_page_size; i++)
+	{
+	    printk("[tiload]read rd_data[%d]=%x\n", i, buf[i]);
+	}
+#endif
+
+}
+
+static long tiload_ioctl( struct file *filp,
 			unsigned int cmd, unsigned long arg)
 {
 	int num = 0;
+	u8 *buf;
+	int i,j;
 	void __user *argp = (void __user *)arg;
 	if (_IOC_TYPE(cmd) != aic3262_IOC_MAGIC)
 		return -ENOTTY;
 
-	dprintk("TiLoad DRIVER : %s\n", __FUNCTION__);
+	dprintk("TiLoad DRIVER : %s cmd:0x%x\n", __FUNCTION__, cmd);
 	switch (cmd) {
 	case aic3262_IOMAGICNUM_GET:
 		num = copy_to_user(argp, &magic_num, sizeof(int));
@@ -252,6 +253,15 @@ static int tiload_ioctl( struct file *filp,
 	case aic3262_IOMAGICNUM_SET:
 		num = copy_from_user(&magic_num, argp, sizeof(int));
 		break;
+	case aic3262_DUMPREG_GET:
+		buf = kmalloc(PAGE_NUM*codec_page_size, GFP_KERNEL);
+		for (i = 0, j=0; i < PAGE_NUM; i++, j++){
+			aic3262_dump_page(aic3262_codec, i, (u8*)(buf+j*codec_page_size));
+		}
+		num = copy_to_user(argp, buf, PAGE_NUM*codec_page_size);
+		kfree(buf);
+		break;
+
 	}
 	return num;
 }
@@ -277,20 +287,17 @@ int aic3262_driver_init(struct snd_soc_codec *codec)
 {
 	int result;
 
-	dev_t dev = MKDEV(aic3262_major, 0);
-	printk("TiLoad DRIVER : %s\n", __FUNCTION__);
+	dev_t dev;
 	aic3262_codec = codec;
 
-	printk("allocating dynamic major number\n");
+	dprintk("TiLoad DRIVER : %s\n", __FUNCTION__);
+	dprintk("allocating dynamic major number\n");
 
 	result = alloc_chrdev_region(&dev, 0, 1, DEVICE_NAME);
 	if (result < 0) {
-		printk("cannot allocate major number %d\n", aic3262_major);
+		dprintk("cannot allocate major number %d\n", aic3262_major);
 		return result;
 	}
-	tiload_class = class_create(THIS_MODULE, DEVICE_NAME);
-	aic3262_major = MAJOR(dev);
-	printk("allocated Major Number: %d\n", aic3262_major);
 
 	aic3262_cdev = cdev_alloc();
 	cdev_init(aic3262_cdev, &aic3262_fops);
@@ -303,9 +310,11 @@ int aic3262_driver_init(struct snd_soc_codec *codec)
 		aic3262_cdev = NULL;
 		return 1;
 	}
+
+	tiload_class = class_create(THIS_MODULE, DEVICE_NAME);
+	device_create(tiload_class, NULL, MKDEV(MAJOR(dev), 0), NULL, DEVICE_NAME);
 	printk("Registered aic3262 TiLoad driver, Major number: %d \n",
 	       aic3262_major);
-	//class_device_create(tiload_class, NULL, dev, NULL, DEVICE_NAME, 0);
 	return 0;
 }
 

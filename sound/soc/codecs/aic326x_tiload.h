@@ -2,7 +2,7 @@
  * linux/sound/soc/codecs/aic3262_tiload.h
  *
  *
- * Copyright (C) 2012 Texas Instruments, Inc.
+ * Copyright (C) 2011 Mistral Solutions Pvt Ltd.
  *
  *
  *
@@ -16,9 +16,9 @@
  *
  * History:
  *
+ * 
  *
- *
- *
+ * 
  */
 
 #ifndef _AIC3262_TILOAD_H
@@ -32,5 +32,6 @@ typedef char *string;
 #define aic3262_IOC_MAGIC	0xE0
 #define aic3262_IOMAGICNUM_GET	_IOR(aic3262_IOC_MAGIC, 1, int)
 #define aic3262_IOMAGICNUM_SET	_IOW(aic3262_IOC_MAGIC, 2, int)
+#define aic3262_DUMPREG_GET	_IOW(aic3262_IOC_MAGIC, 3, int)
 
 #endif
