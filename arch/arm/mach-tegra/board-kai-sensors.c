@@ -148,38 +148,38 @@ static inline void kai_msleep(u32 t)
 }
 
 static int kai_s5kcag_init(void)
-{	
+{
 	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];
 
 	printk("[camera](%s) \n",__FUNCTION__);
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_3M low
-	
+
 	gpio_set_value(CAM_VDD_GPIO, 1);//1.8 high
-	
-	msleep(1); 
-	
+
+	msleep(1);
+
 	gpio_set_value(CAM1_LDO_GPIO, 1);//2.8v_3M high
 
 	msleep(1);
-	
+
 	tegra_gpio_disable(CAM_MCLK_EN_GPIO);//gpio->clk
-	
-	msleep(20);		
-	
+
+	msleep(20);
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);//pwdn_3M high
-	
+
 	msleep(20);
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_3M low
-	
+
 	msleep(20);
-		
+
 	gpio_set_value(cam_pwr->gpio_rst->gpio, !cam_pwr->gpio_rst->active_high);//rst_3M high
-	
+
 	msleep(20);
-	
-	
+
+
 	return 0;
 }
 
@@ -211,7 +211,7 @@ static int kai_camera_init(void)
 			__func__, "CAM1_LDO_GPIO");
 			goto fail_cam1_gpio;
 	}
-	
+
 	tegra_gpio_enable(CAM2_LDO_GPIO);
 	ret = gpio_request(CAM2_LDO_GPIO, "cam2_ldo_en");
 	if (ret < 0) {
@@ -219,7 +219,7 @@ static int kai_camera_init(void)
 			__func__, "CAM2_LDO_GPIO");
 			goto fail_cam2_gpio;
 	}
-	
+
 	tegra_gpio_enable(CAM_VDD_GPIO);
 	ret = gpio_request(CAM_VDD_GPIO, "cam_vdd_en");
 	if (ret < 0) {
@@ -278,7 +278,7 @@ fail_cam2_gpio:
 	gpio_free(CAM2_LDO_GPIO);
 	return ret;
 //&*&*&sam0702
-		
+
 }
 
 static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
@@ -295,7 +295,7 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //				cam_pwr->cam_2v8_reg = regulator_get(NULL, "vdd_cam1");
 //			else if (idx == CAM_FRONT)
 //				cam_pwr->cam_2v8_reg = regulator_get(NULL, "vdd_cam2");
-//	
+//
 //			if (WARN_ON(IS_ERR(cam_pwr->cam_2v8_reg))) {
 //				pr_err("%s: couldn't get regulator vdd_cam: %ld\n",
 //					__func__, PTR_ERR(cam_pwr->cam_2v8_reg));
@@ -303,14 +303,14 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //			}
 //		}
 //		regulator_enable(cam_pwr->cam_2v8_reg);
-//		//kai_msleep(1); 
+//		//kai_msleep(1);
 //		msleep(10);	//&*&*&*cj_20120601,mod for rear facing camera CTS stability
 //		if (cam_pwr->cam_1v8_reg == NULL) {
 //			if (idx == CAM_REAR)
 //				cam_pwr->cam_1v8_reg = regulator_get(NULL, "vdd_1v8_cam1");
 //			else if (idx == CAM_FRONT)
 //				cam_pwr->cam_1v8_reg = regulator_get(NULL, "vdd_1v8_cam2");
-//	
+//
 //			if (WARN_ON(IS_ERR(cam_pwr->cam_1v8_reg))) {
 //				pr_err("%s: couldn't get regulator vdd_1v8_cam: %ld\n",
 //					__func__, PTR_ERR(cam_pwr->cam_1v8_reg));
@@ -319,7 +319,7 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //		}
 //		regulator_enable(cam_pwr->cam_1v8_reg);
 	gpio_set_value(CAM1_LDO_GPIO, 1);//2.8v_rear
-	kai_msleep(1); 
+	kai_msleep(1);
 	gpio_set_value(CAM_VDD_GPIO, 1);//1.8
 
 
@@ -332,7 +332,7 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //				cam_pwr->cam_1v8_reg = regulator_get(NULL, "vdd_1v8_cam1");
 //			else if (idx == CAM_FRONT)
 //				cam_pwr->cam_1v8_reg = regulator_get(NULL, "vdd_1v8_cam2");
-//	
+//
 //			if (WARN_ON(IS_ERR(cam_pwr->cam_1v8_reg))) {
 //				pr_err("%s: couldn't get regulator vdd_1v8_cam: %ld\n",
 //					__func__, PTR_ERR(cam_pwr->cam_1v8_reg));
@@ -340,14 +340,14 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //			}
 //		}
 //		regulator_enable(cam_pwr->cam_1v8_reg);
-//		//kai_msleep(1); 
+//		//kai_msleep(1);
 //		msleep(10); 	//&*&*&*cj_20120601,mod for rear facing camera CTS stability
 //		if (cam_pwr->cam_2v8_reg == NULL) {
 //			if (idx == CAM_REAR)
 //				cam_pwr->cam_2v8_reg = regulator_get(NULL, "vdd_cam1");
 //			else if (idx == CAM_FRONT)
 //				cam_pwr->cam_2v8_reg = regulator_get(NULL, "vdd_cam2");
-//	
+//
 //			if (WARN_ON(IS_ERR(cam_pwr->cam_2v8_reg))) {
 //				pr_err("%s: couldn't get regulator vdd_cam: %ld\n",
 //					__func__, PTR_ERR(cam_pwr->cam_2v8_reg));
@@ -355,16 +355,16 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 //			}
 //		}
 //		regulator_enable(cam_pwr->cam_2v8_reg);
-	
+
 	gpio_set_value(CAM_VDD_GPIO, 1);//1.8v
-	kai_msleep(1); 
+	kai_msleep(1);
 	gpio_set_value(CAM2_LDO_GPIO, 1);//2.8v_front
-	
+
 	}
 
 //&*&*&*cj1_20120612:add for MCLK power sequence
 	msleep(1);
-	tegra_gpio_disable(CAM_MCLK_EN_GPIO); 
+	tegra_gpio_disable(CAM_MCLK_EN_GPIO);
 //&*&*&*cj2_20120612:add for MCLK power sequence
 //&*&*&*cj2_20120601,mod for power sequence
 	if(idx ==CAM_REAR)
@@ -373,7 +373,7 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 		msleep(10);
 //&*&*&*cj1_20120525,mod for power sequence
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);
-	//kai_msleep(2); 
+	//kai_msleep(2);
 	if(idx ==CAM_REAR)
 		msleep(delay_time);
 	else
@@ -381,19 +381,19 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 
 //&*&*&*cj1_20120601,mod for LH HW power sequence
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);
-	//kai_msleep(2); 
+	//kai_msleep(2);
 	if(idx ==CAM_REAR)
 		msleep(delay_time);
 	else
 		msleep(10);
-		
+
 	gpio_set_value(cam_pwr->gpio_rst->gpio, !cam_pwr->gpio_rst->active_high);
-	//kai_msleep(2); 
+	//kai_msleep(2);
 	if(idx ==CAM_REAR)
 		msleep(delay_time);
 	else
 		msleep(10);
-	
+
 //&*&*&*cj2_20120601,mod for LH HW power sequence
 //&*&*&*cj2_20120525,mod for power sequence
 	return 0;
@@ -411,7 +411,7 @@ static int kai_cam_power_on(enum CAM_INDEX idx, int delay_time)
 static int kai_cam_power_off(enum CAM_INDEX idx)
 {
 	printk("[camera](%s)idx=%d \n",__FUNCTION__,idx);
-	
+
 	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[idx];
 
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);
@@ -465,125 +465,125 @@ static int kai_mt9m114_power_off(void)
 static int kai_s5k5cag_power_on(int delay_time)
 {
 	printk("[Jimmy][camera](%s) \n",__FUNCTION__);
-	
-	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];	
-	
+
+	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];
+
 	msleep(1);
-	
+
 	tegra_gpio_disable(CAM_MCLK_EN_GPIO);//gpio->clk
-	
+
 	msleep(10);
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_3M low
-	
+
 	msleep(20);
-	
+
 	return 0;
 }
 
 static int kai_s5k5cag_power_off(void)
 {
 	printk("[Jimmy][camera](%s) \n",__FUNCTION__);
-	
+
 	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);//pwdn_3M high
 
-	msleep(1);	
-	
+	msleep(1);
+
 	tegra_gpio_enable(CAM_MCLK_EN_GPIO);//clk->gpio
-	
+
 	gpio_set_value(CAM_MCLK_EN_GPIO, 0);//gpio -> low
-	
+
 	msleep(20);
-	
+
 	return 0;
 }
 
 static int kai_s5k5cag_suspend(void)
 {
 	printk("[Jimmy][camera](%s) \n",__FUNCTION__);
-	
-	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];	
+
+	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_REAR];
 
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);//pwdn_3M high
-	
+
 	msleep(20);
-	
+
 	gpio_set_value(cam_pwr->gpio_rst->gpio, cam_pwr->gpio_rst->active_high);//rst_3M low
 
 	msleep(1);
-	
+
 	tegra_gpio_enable(CAM_MCLK_EN_GPIO);//clk->gpio
-	
+
 	gpio_set_value(CAM_MCLK_EN_GPIO, 0);//gpio -> low
 
 	gpio_set_value(CAM_VDD_GPIO, 0);//1.8v low
-	
+
 	gpio_set_value(CAM1_LDO_GPIO, 0);//2.8v_3M low
 
 	msleep(20);
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_3M low
-	
+
 	return 0;
 }
 
 static int kai_mt9m114_power_on(int delay_time)
 {
 	printk("[Jimmy][camera](%s) \n",__FUNCTION__);
-	
+
 	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_FRONT];
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_1.3M low
 
 	gpio_set_value(CAM2_LDO_GPIO, 1);//2.8v_1.3M high
-	
+
 	msleep(1);
-	
+
 	tegra_gpio_disable(CAM_MCLK_EN_GPIO);//gpio->clk
-	
+
 	msleep(10);
-		
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);//pwdn_1.3M high
-	
+
 	msleep(10);
 
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_1.3M low
-	
+
 	msleep(10);
-		
+
 	gpio_set_value(cam_pwr->gpio_rst->gpio, !cam_pwr->gpio_rst->active_high);//rst_1.3M high
-	
+
 	msleep(10);
-			
+
 	return 0;
 }
 
 static int kai_mt9m114_power_off(void)
 {
 	printk("[Jimmy][camera](%s) \n",__FUNCTION__);
-	
-	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_FRONT];	
+
+	struct kai_cam_power_rail *cam_pwr = &kai_cam_pwr[CAM_FRONT];
 
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, cam_pwr->gpio_pwdn->active_high);//pwdn_1.3M high
-	
+
 	msleep(20);
-	
+
 	gpio_set_value(cam_pwr->gpio_rst->gpio, cam_pwr->gpio_rst->active_high);//rst_1.3M low
 
 	msleep(1);
-	
+
 	tegra_gpio_enable(CAM_MCLK_EN_GPIO);//clk->gpio
-	
+
 	gpio_set_value(CAM_MCLK_EN_GPIO, 0);//gpio -> low
 
 	gpio_set_value(CAM2_LDO_GPIO, 0);//2.8v_1.3M low
 
 	msleep(20);
-	
+
 	gpio_set_value(cam_pwr->gpio_pwdn->gpio, !cam_pwr->gpio_pwdn->active_high);//pwdn_1.3M low
-	
+
 	return 0;
 }
 #endif
@@ -616,7 +616,7 @@ int __init kai_sensors_init(void)
 	kai_camera_init();
 	kai_s5kcag_init();
 	kai_s5k5cag_power_off();
-	
+
 	i2c_register_board_info(2, kai_i2c2_board_info,
 		ARRAY_SIZE(kai_i2c2_board_info));
 
