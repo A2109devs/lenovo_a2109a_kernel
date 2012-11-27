@@ -54,7 +54,7 @@ static int tegra_wake_event_irq[] = {
 	TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PW3),	/* wake11 */
 	#else
 	-EINVAL,									/* wake11 */
-	#endif	
+	#endif
 	TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PW2),	/* wake12 */
 	TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PY6),	/* wake13 */
 	TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_PDD3),	/* wake14 */
@@ -167,19 +167,19 @@ int tegra3_get_wakeup_reason(void)
 				wakeup = WKUP_BATT_LOW;
 			} else if (g_pmic_wk_lv2_irq & PMIC_LV2IRQ_GPIO6_MASK)
 			;	//VDD_CORE_REQ
-		}		
+		}
 	} else if (g_tegra_wk_status & TEGRA_WAKE_GPIO_PI5) {
 		wakeup = WKUP_SD;
 	} else if (g_tegra_wk_status & TEGRA_WAKE_GPIO_PW3) {
 		wakeup = WKUP_WIFI;
 	} else if (g_tegra_wk_status & TEGRA_WAKE_GPIO_PU6) {
-		wakeup = WKUP_BT;		
+		wakeup = WKUP_BT;
 	}
 
 	printk("%s, g_pmic_wk_top_irq=0x%x \n", __func__, g_pmic_wk_top_irq);
 	printk("%s, g_pmic_wk_lv2_irq=0x%x \n", __func__, g_pmic_wk_lv2_irq);
 	printk("%s, g_tegra_wk_status_L=0x%x \n", __func__, g_tegra_wk_status&0xFFFFFFFF);
-	printk("%s, g_tegra_wk_status_H=0x%x \n", __func__, (g_tegra_wk_status>>32)&0xFFFFFFFF);	
+	printk("%s, g_tegra_wk_status_H=0x%x \n", __func__, (g_tegra_wk_status>>32)&0xFFFFFFFF);
 	printk("%s, wakeup reason is [%d - %s]\n", __func__, wakeup, cl2n_wkup_source[wakeup].name);
 
 	if (get_suspend_state() != PM_SUSPEND_ON) {
