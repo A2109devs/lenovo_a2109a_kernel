@@ -287,7 +287,7 @@ static int tegra_pm_irq_syscore_suspend(void)
 	//wake_enb = tegra_lp0_wake_enb;
 	wake_enb = tegra_lp0_wake_enb & (0x7FFFFFFFFF);
 	//&*&*&*AL2_20120625 masked wakeup of usb utpim
-	
+
 	if (debug_lp0) {
 		wake_level = lvl ^ status;
 		wake_enb = 0xffffffff;
