@@ -324,8 +324,8 @@ static struct smb349_charger_platform_data smb349_charger_pdata = {
 	.num_consumer_supplies = ARRAY_SIZE(smb349_vbus_supply),
 	.stat_gpio = MAX77663_GPIO_BASE + MAX77663_GPIO1,
 	.irq_gpio = MAX77663_IRQ_BASE + MAX77663_IRQ_GPIO1,
-	.configuration_data = {0x6A/*input current*/, 0x40/*taper current*/, 0xFF, 0xFF, 0x38/*recharge current=100mA*/, 0xFF, 0xFF, 0x40/*min system voltage and termal enable*/, 
-						   0xFF, 0xFF/*OTG active low: 0x20*/, 0xFF, 0x4E,//0x8E/*temperature monitor:0~50*/ 
+	.configuration_data = {0x6A/*input current*/, 0x40/*taper current*/, 0xFF, 0xFF, 0x38/*recharge current=100mA*/, 0xFF, 0xFF, 0x40/*min system voltage and termal enable*/,
+						   0xFF, 0xFF/*OTG active low: 0x20*/, 0xFF, 0x4E,//0x8E/*temperature monitor:0~50*/
 						   0x80, 0x98, /*<-- interrupt mask*/
 						   0xFF, 0xFF, 0x0F/*low battery threshold:3.58*/},
 };
@@ -362,9 +362,9 @@ static struct spi_board_info __initdata aic326x_spi_board_info[] = {
 		//.max_speed_hz = 12000000,
 		.max_speed_hz = 4000000,
 		.platform_data = &kai_aic326x_pdata,
-//&*&*&*BC1_120514: use gpio interrupt to detect headset 
+//&*&*&*BC1_120514: use gpio interrupt to detect headset
 		//.irq = TEGRA_GPIO_TO_IRQ(TEGRA_GPIO_CDC_IRQ),
-//&*&*&*BC2_120514: use gpio interrupt to detect headset 
+//&*&*&*BC2_120514: use gpio interrupt to detect headset
 	},
 };
 static void kai_i2c_init(void)
@@ -609,10 +609,10 @@ static struct platform_device tegra_rtc_device = {
 static struct tegra_asoc_platform_data kai_audio_device_aic326x_platform_data ={
 
 	.gpio_spkr_en = -1,
-//&*&*&*BC1_120514: use gpio interrupt to detect headset 
+//&*&*&*BC1_120514: use gpio interrupt to detect headset
 	//.gpio_hp_det = -1,
 	.gpio_hp_det = TEGRA_GPIO_HP_DET,
-//&*&*&*BC2_120514: use gpio interrupt to detect headset 
+//&*&*&*BC2_120514: use gpio interrupt to detect headset
 	.gpio_hp_mute = -1,
 	.gpio_int_mic_en = -1,
 	.gpio_ext_mic_en = -1,
@@ -625,7 +625,7 @@ static struct tegra_asoc_platform_data kai_audio_device_aic326x_platform_data ={
 		.rate = -1,
 		.channels = -1,
 	},
-	
+
 };
 
 static struct platform_device kai_audio_device_aic326x = {
@@ -855,9 +855,9 @@ static void __init tegra_kai_init(void)
 	kai_uart_init();
 	kai_tsensor_init();
 	/* kai_audio_init(); */
-//&*&*&*BC1_120514: change spi device sequence to fix suspend issue 	
+//&*&*&*BC1_120514: change spi device sequence to fix suspend issue
 //	kai_spi_init();
-//&*&*&*BC2_120514: change spi device sequence to fix suspend issue 		
+//&*&*&*BC2_120514: change spi device sequence to fix suspend issue
 	platform_add_devices(kai_devices, ARRAY_SIZE(kai_devices));
 	tegra_ram_console_debug_init();
 	kai_sdhci_init();
