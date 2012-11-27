@@ -149,8 +149,8 @@ static void kai_backlight_exit(struct device *dev)
 	/*ret = gpio_request(kai_vdd_bl_enb, "backlight_enb");*/
 	gpio_set_value(kai_vdd_bl_enb, 0);
  /*20120607, JimmySu remove unsed setting*/
-/*	gpio_free(kai_vdd_bl_enb); 
-	tegra_gpio_disable(kai_vdd_bl_enb); 
+/*	gpio_free(kai_vdd_bl_enb);
+	tegra_gpio_disable(kai_vdd_bl_enb);
 */
 	return;
 }
@@ -227,7 +227,7 @@ static int kai_panel_enable(void)
 	}
 	regulator_enable(kai_lvds_vdd_panel);
 
-	
+
 	if (panel_board_id == CL2N_BOARD_VER_A00){
 		gpio_set_value(kai_lvds_stdby_evt, 1);
 	}else{
@@ -241,7 +241,7 @@ static int kai_panel_enable(void)
 	gpio_set_value(kai_lvds_avdd_en, 1);
 
 //5. Reset ----\___/----
-	if (first != 0){ 
+	if (first != 0){
 		mdelay(40);
 	gpio_set_value(kai_lvds_rst, 0);
 		udelay(500);
@@ -684,8 +684,8 @@ static void kai_panel_early_suspend(struct early_suspend *h)
 //&*&*&*SJ1_20120613
 #ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
   if (gMTP_Mode) {
-    printk("USB MTP/PTP mode, skip set conservative governor\n");  	
-  	return;
+    printk("USB MTP/PTP mode, skip set conservative governor\n");
+      return;
   }
 #endif
 //&*&*&*SJ1_20120613
@@ -710,9 +710,9 @@ static void kai_panel_late_resume(struct early_suspend *h)
 //&*&*&*SJ1_20120613
 #ifdef CONFIG_OPTIMIZE_USB_MTP_PTP
   if (!gMTP_Mode)
-   cpufreq_restore_default_governor();		
+   cpufreq_restore_default_governor();
 #else
-   cpufreq_restore_default_governor();		
+   cpufreq_restore_default_governor();
 #endif
 //&*&*&*SJ1_20120613
 #endif
@@ -744,7 +744,7 @@ int __init kai_panel_init(void)
 	gpio_request(kai_lvds_stdby_evt, "lvds_stdby_evt");
 	gpio_direction_output(kai_lvds_stdby_evt, 1);
 	tegra_gpio_enable(kai_lvds_stdby_evt);
-	}else{	
+	}else{
 	gpio_request(kai_lvds_stdby, "lvds_stdby");
 	gpio_direction_output(kai_lvds_stdby, 1);
 	tegra_gpio_enable(kai_lvds_stdby);
