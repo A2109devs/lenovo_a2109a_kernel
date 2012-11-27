@@ -259,7 +259,7 @@ static int __init kai_wifi_init(void)
 	rc = gpio_request(KAI_WLAN_PWR, "wlan_power");
 	if (rc)
 		pr_err("WLAN_PWR gpio request failed:%d\n", rc);
-	
+
 	rc = gpio_request(KAI_WLAN_WOW, "bcmsdh_sdmmc");
 	if (rc)
 		pr_err("WLAN_WOW gpio request failed:%d\n", rc);
@@ -270,7 +270,7 @@ static int __init kai_wifi_init(void)
 	rc = gpio_direction_output(KAI_WLAN_PWR, 0);
 	if (rc)
 		pr_err("WLAN_PWR gpio direction configuration failed:%d\n", rc);
-	
+
 	rc = gpio_direction_input(KAI_WLAN_WOW);
 	if (rc)
 		pr_err("WLAN_WOW gpio direction configuration failed:%d\n", rc);
