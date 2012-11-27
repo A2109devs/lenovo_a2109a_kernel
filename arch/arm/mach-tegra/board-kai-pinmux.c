@@ -269,7 +269,7 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(GPIO_PBB7,       I2S4,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GPIO_PCC1,       I2S4,            NORMAL,    NORMAL,     INPUT),
 	DEFAULT_PINMUX(GPIO_PCC2,       I2S4,            NORMAL,    NORMAL,     INPUT),*/
-	
+
 	DEFAULT_PINMUX(GPIO_PBB0,       I2S4,            NORMAL,    TRISTATE,     OUTPUT),
 	DEFAULT_PINMUX(GPIO_PBB7,       I2S4,            NORMAL,    TRISTATE,     OUTPUT),
 	DEFAULT_PINMUX(GPIO_PCC1,       I2S4,            NORMAL,    TRISTATE,     OUTPUT),
@@ -393,7 +393,7 @@ static __initdata struct tegra_pingroup_config kai_pinmux_common[] = {
 	DEFAULT_PINMUX(KB_ROW11,        KBC,             NORMAL,    NORMAL,     OUTPUT),
 	DEFAULT_PINMUX(KB_ROW12,        KBC,             NORMAL,    TRISTATE,   OUTPUT),
 	DEFAULT_PINMUX(KB_ROW13,        KBC,             NORMAL,    TRISTATE,   OUTPUT),
-	
+
 	/* GPIO_PP1 AP_READY */
 	DEFAULT_PINMUX(DAP3_DIN,        RSVD1,           NORMAL,    NORMAL,   OUTPUT),
 	/* GPIO_PP2 MODEM_READY */
@@ -478,15 +478,15 @@ static void __init kai_pinmux_audio_init(void)
 	//gpio_request(TEGRA_GPIO_CDC_IRQ, "rt5640");
 	gpio_request(TEGRA_GPIO_CDC_IRQ, "aic326x");
 	gpio_direction_input(TEGRA_GPIO_CDC_IRQ);
-	
-//reset
-	tegra_gpio_enable(TEGRA_GPIO_PX2);
-	gpio_request(TEGRA_GPIO_PX2, "TEGRA_GPIO_PX2");
-	gpio_direction_output(TEGRA_GPIO_PX2, 1);
-    gpio_set_value(TEGRA_GPIO_PX2, 0);    
-    mdelay(50);
- 	gpio_set_value(TEGRA_GPIO_PX2, 1);
- 	    
+
+        //reset
+        tegra_gpio_enable(TEGRA_GPIO_PX2);
+        gpio_request(TEGRA_GPIO_PX2, "TEGRA_GPIO_PX2");
+        gpio_direction_output(TEGRA_GPIO_PX2, 1);
+        gpio_set_value(TEGRA_GPIO_PX2, 0);
+        mdelay(50);
+        gpio_set_value(TEGRA_GPIO_PX2, 1);
+
 	tegra_gpio_enable(TEGRA_GPIO_HP_DET);
 	tegra_gpio_enable(TEGRA_GPIO_INT_MIC_EN);
 	tegra_gpio_enable(TEGRA_GPIO_EXT_MIC_EN);
